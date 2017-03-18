@@ -1,0 +1,7 @@
+*.pyc
+bin/
+lib/
+share/
+*.egg-info/
+include/
+kicker.db
