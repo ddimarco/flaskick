@@ -7,3 +7,10 @@ tr.scoreRow > td {
     font-size: 1.6em;
     text-align: center;
 }
+h2 {
+    padding-bottom: .4em;
+}
+#sidebar {
+    overflow-x: hidden;
+    overflow-y: auto;
+}

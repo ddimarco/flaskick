@@ -27,40 +27,18 @@
           <a class="navbar-brand" href="/">Flaskick</a>
         </div>
         <ul class="nav navbar-nav">
-            <!-- <li {{ 'class=active' if 'Reports' in page_title }}>
-                 <a href="/reports">Reports</a>
-                 </li> -->
-            <li>
-                <a href="/">History</a>
-            </li>
-          <!-- <li {{ 'class=active' if page_title in ['customer','address','contact'] }}>
-               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-               Customers
-               <span class="caret"></span>
-               </a>
-               <ul class="dropdown-menu">
-               <li><a href="/listing/customer">General</a></li>
-               <li><a href="/listing/address">Address</a></li>
-               <li><a href="/listing/contact">Contact</a></li>
-               </ul>
-               </li>
-               <li {{ 'class=active' if page_title in ['subscription','deliveryAddress','deliveryContact'] }}>
-               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-               Subscriptions
-               <span class="caret"></span>
-               </a>
-               <ul class="dropdown-menu">
-               <li><a href="/listing/subscription">General</a></li>
-               <li><a href="/listing/deliveryAddress">Address</a></li>
-               <li><a href="/listing/deliveryContact">Contact</a></li>
-               </ul>
-               </li>
-               <li {{ 'class=active' if 'coupon' in page_title }}>
-               <a href="/listing/coupon">Coupons</a>
-               </li>
-               <li {{ 'class=active' if 'parcel' in page_title }}>
-               <a href="/listing/parcel">Parcels</a>
+          <!-- <li {{ 'class=active' if 'Reports' in page_title }}>
+               <a href="/reports">Reports</a>
                </li> -->
+          <li>
+            <a href="/">History</a>
+          </li>
+          <li>
+            <a href="/players">Players</a>
+          </li>
+          <li>
+            <a href="/teams">Teams</a>
+          </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li>
@@ -72,8 +50,28 @@
         </ul>
       </div>
     </nav>
-    <div class="container-fluid">
-      {% block content %}{% endblock %}
+
+
+    <div class="container">
+      <div class="row">
+        <div id="main" class="col-md-10">
+          {% block content %}{% endblock %}
+        </div>
+        <div id="sidebar" class="col-md-2">
+          <h3>Player Ranking</h3>
+          <table class="table">
+            <tbody>
+              {% for player in players %}
+              <tr>
+                <td><a href="/player/{{player.id}}">{{player.name}}</a></td>
+                <td>{{player.stat.points}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
     </div>
 
     <div class="modal fade" id="refresh-modal" role="dialog">

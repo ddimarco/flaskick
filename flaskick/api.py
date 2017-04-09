@@ -1,6 +1,7 @@
 import math
 
 import dateutil.parser
+#import pandas as pd
 from flask import request
 
 from flask_restful import Api, Resource, reqparse
@@ -154,6 +155,51 @@ class PlayersResource(Resource):
         return {'data': [p.to_json for p in players]}
 
 
+# FIXME: duplicate to PlayerStatisticsresource?
+# class PlayerMatchesResource(Resource):
+#     def get(self, id):
+#         teamids = db.session.query(Team.id).filter(
+#             db.or_(Team.player1_id == id, Team.player2_id == id)).subquery()
+#         matches = Match.query.filter(db.or_(Match.team1_id.in_(teamids),
+#                                             Match.team2_id.in_(teamids))).subquery()
+#         df = pd.read_sql_query(matches, db.engine)
+#         return df.to_csv(encoding='utf-8')
+
+
+class PlayerMatchesResource(Resource):
+    def get(self, id):
+        # player = Player.query.get(id)
+
+        teams = db.session.query(Team.id).filter(
+            db.or_(Team.player1_id == id, Team.player2_id == id)).subquery()
+        won_matches = Match.query.filter(Match.team1_id.in_(teams)).all()
+        lost_matches = Match.query.filter(Match.team2_id.in_(teams)).all()
+        # all_matches = Match.query.filter(
+        #     db.or_(Match.team1_id.in_(teams), Match.team2_id.in_(teams))).join(
+        #         MatchDay, Match.matchday).order_by(MatchDay.date).all()
+
+        def get_partner(team):
+            if team.player1 == id:
+                return team.player2
+            else:
+                return team.player1
+
+        def make_entry(m, won):
+            return {
+                'won': won,
+                'date': m.matchday.date.isoformat(),
+                'crawl': m.crawling,
+                'points': m.points * (1 if won else -1),
+                'partner': get_partner(m.team1 if won else m.team2).id,
+                'enemy_team': (m.team2 if won else m.team1).id,
+            }
+
+        dcmodel = [make_entry(m, True) for m in won_matches
+                   ] + [make_entry(m, False) for m in lost_matches]
+
+        return dcmodel
+
+
 class PlayerStatisticsResource(Resource):
     def get(self, id):
         # FIXME: keep this data in db table
@@ -261,6 +307,9 @@ class TeamStatisticsResource(Resource):
         }
         return res
 
+
+api.add_resource(
+    PlayerMatchesResource, '/api/playermatches/<int:id>', methods=['GET'])
 
 api.add_resource(MatchDaysResource, '/api/matchdays', methods=['GET'])
 api.add_resource(MatchDayResource, '/api/matchdays/<int:id>', methods=['GET'])

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Flaskick - {{player.name}} {% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.3/dc.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.3/dc.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+
+<script src="/static/player_report.js"></script>
+<script>
+ var env = {
+ };
+
+ $(document).ready(function() {
+     setupCharts('{{player.id}}');
+
+ });
+</script>
+{% endblock %}
+{% block content %}
+
+    <h1>{{player.name}}</h1>
+
+    <ul class="list-group">
+        <li class="list-group-item">Points: {{player.stat.points}}</li>
+        <li class="list-group-item">Games played: {{matches_played}}</li>
+        <li class="list-group-item">Average Points won per Match: {{avg_points | round(2)}}</li>
+    </ul>
+
+    <div class="well">
+        <div id="chart-winratio">
+            <div>
+                <strong>Win/Lose Ratio</strong>
+                <a class="reset"
+                   href="javascript:env.winratioChart.filterAll();dc.redrawAll();"
+                   style="visibility: hidden;">reset</a>
+            </div>
+        </div>
+        <div id="chart-crawl">
+            <div>
+                <strong>Games with Crawling</strong>
+                <a class="reset"
+                   href="javascript:env.crawlChart.filterAll();dc.redrawAll();"
+                   style="visibility: hidden;">reset</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div class="col-sm-12">
+         <div class="well">
+         <div id="chart-timeline">
+         <div>
+         <strong>By time</strong>
+         <span class="reset" style="visibility: hidden;">
+         range: <span class="filter"></span>
+         </span>
+         <a class="reset"
+         href="javascript:env.lineChart.filterAll();env.dateRangeChart.filterAll();dc.redrawAll();"
+         style="visibility: hidden;">reset</a>
+         </div>
+         </div>
+
+         <div id="chart-date-range">
+         </div>
+         </div>
+         </div> -->
+
+<br>
+<br>
+    <h2>Teams</h2>
+    <ul class="list-group">
+    {% for team in teams %}
+        <li class="list-group-item">{{team.player1.name}} & {{team.player2.name}}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

@@ -45,10 +45,14 @@ class PlayerStat(db.Model):
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    player1_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
-    player1 = db.relationship('Player', uselist=False, primaryjoin='Team.player1_id == Player.id')
-    player2_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
-    player2 = db.relationship('Player', uselist=False, primaryjoin='Team.player2_id == Player.id')
+    player1_id = db.Column(
+        db.Integer, db.ForeignKey('player.id'), nullable=False)
+    player1 = db.relationship(
+        'Player', uselist=False, primaryjoin='Team.player1_id == Player.id')
+    player2_id = db.Column(
+        db.Integer, db.ForeignKey('player.id'), nullable=True)
+    player2 = db.relationship(
+        'Player', uselist=False, primaryjoin='Team.player2_id == Player.id')
     stat_id = db.Column(
         db.Integer, db.ForeignKey('team_stat.id'), nullable=False)
     stat = db.relationship('TeamStat', back_populates='team')
@@ -101,9 +105,11 @@ class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # team1 = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
-    team1 = db.relationship('Team', uselist=False, primaryjoin='Match.team1_id == Team.id')
+    team1 = db.relationship(
+        'Team', uselist=False, primaryjoin='Match.team1_id == Team.id')
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
-    team2 = db.relationship('Team', uselist=False, primaryjoin='Match.team2_id == Team.id')
+    team2 = db.relationship(
+        'Team', uselist=False, primaryjoin='Match.team2_id == Team.id')
     goals_team1 = db.Column(db.Integer, nullable=False, autoincrement=False)
     goals_team2 = db.Column(db.Integer, nullable=False, autoincrement=False)
     points = db.Column(db.Integer, nullable=False, autoincrement=False)
@@ -197,8 +203,8 @@ def add_team(t1, pointsdiff):
             print('single player team found: %s' % t_qry)
             t_qry.stat.points += pointsdiff
     elif len(t1) == 2:
-        p1 = t1[0]#.id
-        p2 = t1[1]#.id
+        p1 = t1[0]
+        p2 = t1[1]
         t_qry = Team.query.filter(
             db.or_(
                 db.and_(Team.player1 == p1, Team.player2 == p2),
@@ -206,8 +212,8 @@ def add_team(t1, pointsdiff):
         if not t_qry:
             # print('adding team: %s' % t1)
             team = Team()
-            team.player1 = t1[0]#.id
-            team.player2 = t1[1]#.id
+            team.player1 = t1[0]
+            team.player2 = t1[1]
             db.session.add(team)
             tm_stat = TeamStat(team=team, points=1200 + pointsdiff)
             db.session.add(tm_stat)

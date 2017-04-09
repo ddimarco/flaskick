@@ -5,6 +5,7 @@ import click
 from flaskick.app import app, db
 from flaskick.models import import_matches
 from flaskick.views import index
+from flaskick.api import api
 
 @click.group()
 def cli():

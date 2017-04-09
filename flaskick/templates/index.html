@@ -2,37 +2,36 @@
 {% block title %}Flaskick{% endblock %}
 {% block content %}
 
-<div class="container">
 {% for matchday in matchdays %}
-    <h2>{{matchday.date.strftime('%a, %d. %b')}} <small>{{matchday.matches|length}} games</small></h2>
-    <table style="width: 60%">
-        <thead/>
-        <tbody>
-            {% for match in matchday.matches %}
-            <tr class="versusRow">
-                <td >Team {{match.team1.id}} ({{match.team1.player1.name}},
-                    {{match.team1.player2.name}})
-                </td>
-                <td ></td>
-                <td > Team {{match.team2.id}} ({{match.team2.player1.name}},
-                    {{match.team2.player2.name}})
-                </td>
-            </tr>
-            <tr class="scoreRow">
-                <td >{{match.goals_team1}}</td>
-                <td >
-                    +{{match.points}}
-                </td>
-                <td >{{match.goals_team2}}
-                    {% if match.crawling %}
-                    <span class="badge">Crawling!</span>
-                    {% endif %}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <hr>
+<h2>{{matchday.date.strftime('%a, %d. %b')}} <small>{{matchday.matches|length}} games</small></h2>
+<table style="width: 70%">
+  <thead/>
+  <tbody>
+    {% for match in matchday.matches %}
+    <tr class="versusRow">
+      <td >Team {{match.team1.id}}
+        (<a href="/player/{{match.team1.player1.id}}">{{match.team1.player1.name}}</a>,
+        <a href="/player/{{match.team1.player2.id}}">{{match.team1.player2.name}}</a>)
+      </td>
+      <td ></td>
+      <td > Team {{match.team2.id}}
+        (<a href="/player/{{match.team2.player1.id}}">{{match.team2.player1.name}}</a>,
+        <a href="/player/{{match.team2.player2.id}}">{{match.team2.player2.name}}</a>)
+      </td>
+    </tr>
+    <tr class="scoreRow">
+      <td >{{match.goals_team1}}</td>
+      <td >
+        +{{match.points}}
+      </td>
+      <td >{{match.goals_team2}}
+        {% if match.crawling %}
+        <span class="badge">Crawling!</span>
+        {% endif %}</td>
+    </tr>
     {% endfor %}
-</div>
+  </tbody>
+</table>
+
+{% endfor %}
 {% endblock %}
