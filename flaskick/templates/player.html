@@ -27,6 +27,20 @@
   <li class="list-group-item">Games played: {{matches_played}}</li>
   <li class="list-group-item">Average Points won per Match: {{avg_points | round(2)}}</li>
 </ul>
+<div id="chart-timeline" style="width:100%;">
+  <div>
+    <strong>Score development</strong>
+    <span class="reset" style="visibility: hidden;">
+      range: <span class="filter"></span>
+    </span>
+    <a class="reset"
+       href="javascript:env.lineChart.filterAll();env.dateRangeChart.filterAll();dc.redrawAll();"
+       style="visibility: hidden;">reset</a>
+  </div>
+</div>
+
+<div id="chart-date-range" style="width:100%;">
+</div>
 
 <div class="row">
   <div id="chart-winratio">
@@ -56,19 +70,18 @@
   </div>
 </div>
 
-<div id="chart-timeline" style="width:100%;">
+<div id="chart-partners" style="width:100%;">
   <div>
-    <strong>Score development</strong>
-    <span class="reset" style="visibility: hidden;">
-      range: <span class="filter"></span>
-    </span>
-    <a class="reset"
-       href="javascript:env.lineChart.filterAll();env.dateRangeChart.filterAll();dc.redrawAll();"
-       style="visibility: hidden;">reset</a>
+    <strong>Partners</strong>
+  <a class="reset" href="javascript:partnersChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
   </div>
 </div>
 
-<div id="chart-date-range" style="width:100%;">
+<div id="chart-enemies" style="width:100%;">
+  <div>
+    <strong>Enemy Teams</strong>
+  <a class="reset" href="javascript:enemiesChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+  </div>
 </div>
 
 <table id="data-table" class="table table-hover">
