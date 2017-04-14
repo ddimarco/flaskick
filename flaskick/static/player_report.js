@@ -243,7 +243,7 @@ var setupCharts = function(playerid) {
 
             .title(function(d) {
                 return d.value.wins + "/" + d.value.count + " won, "
-                    + d.value.points_made + " points made";
+                    + d.value.points_made + " points";
             })
             // // FIXME: why not displayed?
             // .xAxisLabel("Points", 10)
@@ -280,7 +280,7 @@ var setupCharts = function(playerid) {
 
             .title(function(d) {
                 return d.value.wins + "/" + d.value.count + " won, "
-                    + d.value.points_made + " points made";
+                    + d.value.points_made + " points";
             })
             // // FIXME: why not displayed?
             // .xAxisLabel("Points", 10)
