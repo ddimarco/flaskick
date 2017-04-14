@@ -1,10 +1,23 @@
 var setupCharts = function(playerid) {
     $.get('/api/playermatches/' + playerid, function(model_) {
+        // scaled y-axis, see https://github.com/dc-js/dc.js/issues/667
+        function nonzero_min(chart) {
+            dc.override(chart, 'yAxisMin', function () {
+                var min = d3.min(chart.data(), function (layer) {
+                    return d3.min(layer.values, function (p) {
+                        return p.y + p.y0;
+                    });
+                });
+                return dc.utils.subtract(min, chart.yAxisPadding());
+            });
+            return chart;
+        }
+
         // create global charts
         env.winratioChart = dc.pieChart("#chart-winratio");
         env.crawlChart = dc.pieChart("#chart-crawl");
-        env.dateRangeChart = dc.barChart('#chart-date-range');
-        env.lineChart = dc.lineChart("#chart-timeline");
+        env.lineChart = nonzero_min(dc.lineChart("#chart-timeline"));
+        env.dateRangeChart = nonzero_min(dc.barChart('#chart-date-range'));
 
         env.dayOfWeekChart = dc.rowChart("#chart-dayofweek");
         env.dataTable = dc.dataTable('#data-table');
@@ -22,12 +35,11 @@ var setupCharts = function(playerid) {
             score += model[i].points;
             model[i].score = score;
         }
-        // console.log(model);
         env.ndx = crossfilter(model);
         var all = env.ndx.groupAll();
 
-        var timeDim = env.ndx.dimension(d => d.date);
-        var timeGroup = timeDim.group();
+        var dateDim = env.ndx.dimension(d => d.date);
+        var dateGroup = dateDim.group();
 
         var dayOfWeek = env.ndx.dimension(function(d) {
             var day = d.date.day();
@@ -36,11 +48,57 @@ var setupCharts = function(playerid) {
         });
         var dayOfWeekGroup = dayOfWeek.group();
 
-        var dayFirst = timeDim.bottom(1)[0].date;
-        var dayLast = timeDim.top(1)[0].date;
+        var dayFirst = dateDim.bottom(1)[0].date;
+        var dayLast = dateDim.top(1)[0].date;
 
-        var scoreDim = env.ndx.dimension(d => d.score);
-        var scoreGroup = scoreDim.group().reduceSum(d => d.score);
+        var scoreGroup = dateDim.group().reduce(
+            function(p, v, nf) {
+                // add
+                return Math.max(p, v.score);
+            },
+            function(p, v, nf) {
+                // remove
+                // FIXME
+                return Math.max(p, v.score);
+            },
+            function() {
+                // initial
+                return 0;
+            });
+        env.lineChart
+            .rangeChart(env.dateRangeChart)
+            .dimension(dateDim)
+            .group(scoreGroup)
+            .renderArea(true)
+            .height(200)
+            .renderHorizontalGridLines(true)
+            .brushOn(false)
+            .x(d3.time.scale().domain([dayFirst, dayLast]))
+            .xUnits(d3.time.days)
+            .elasticY(true)
+            .yAxisPadding(50)
+            .xAxisPadding(50)
+            .yAxisLabel("", 10)
+            .renderDataPoints(true)
+            //.legend(dc.legend())
+            // .controlsUseVisibility(true)
+            .title(function(d) {
+                return moment(d.key).format("ddd, MMMM Do YYYY") + ": " + d.value;
+            });
+
+        env.dateRangeChart
+            .height(75)
+            .elasticY(true)
+            .dimension(dateDim)
+            .group(scoreGroup)
+            .centerBar(false)
+            .gap(1)
+            .x(d3.time.scale().domain([dayFirst, dayLast]))
+            .round(d3.time.week.round)
+            .xUnits(d3.time.weeks)
+            .alwaysUseRounding(true)
+            .controlsUseVisibility(true)
+            .yAxis().ticks(0);
 
         var wonDim = env.ndx.dimension(d => d.won);
         var wonGroup = wonDim.group();
@@ -78,7 +136,6 @@ var setupCharts = function(playerid) {
                 }
                 return Math.floor(d.value / all.value() * 100) + "%";
             })
-
         .width(300)
             .height(140)
             .innerRadius(25)
@@ -89,74 +146,24 @@ var setupCharts = function(playerid) {
             .controlsUseVisibility(true)
             .legend(dc.legend().x(150).y(20).itemHeight(13).gap(2));
 
-
         env.dayOfWeekChart
             .width(300)
             .height(140)
             .group(dayOfWeekGroup)
             .dimension(dayOfWeek)
+            .ordinalColors(['#3182bd', '#3182bd', '#3182bd', '#3182bd', '#3182bd'])
+            .elasticX(true)
             .label(function(d) {
                 return d.key.split('.')[1];
             })
             .title(function(d) {
                 return d.value;
-            });
-            // .xAxis().ticks(4);
-
-        env.dateRangeChart
-            .width(400)
-            .height(50)
-            .margins({
-                top: 0,
-                right: 10,
-                bottom: 20,
-                left: 30
             })
-            .dimension(scoreDim)
-            .group(scoreGroup)
-            .centerBar(false)
-            .gap(1)
-            .x(d3.time.scale().domain([dayFirst, dayLast]))
-            .round(d3.time.week.round)
-            .xUnits(d3.time.weeks)
-            .alwaysUseRounding(true)
-            .controlsUseVisibility(true)
-            .yAxis().ticks(0);
+            .xAxis().ticks(4);
 
-
-
-        env.lineChart
-            .renderArea(true)
-            // .width(400)
-            .height(200)
-            .margins({
-                top: 20,
-                right: 10,
-                bottom: 20,
-                left: 30
-            })
-            .clipPadding(5)
-            //.colors(d3.scale.ordinal().range(['#1f77b4', '#d62728']))
-            .renderHorizontalGridLines(true)
-            .elasticY(true)
-            .brushOn(false)
-            .x(d3.time.scale().domain([dayFirst, dayLast]))
-            .round(d3.time.days.round)
-            .xUnits(d3.time.days)
-            // .rangeChart(env.dateRangeChart)
-            .dimension(timeDim)
-            .group(scoreGroup)
-            // .valueAccessor(d => {
-            //     return d.value;
-            // })
-            //.legend(dc.legend())
-            .controlsUseVisibility(true)
-            .title(function(d) {
-                return moment(d.key).format("ddd, MMMM Do YYYY") + ": " + d.value;
-            });
 
         env.dataTable
-            .dimension(timeDim)
+            .dimension(dateDim)
             .group(function(d) {
                 return d.date;
             })
@@ -171,11 +178,9 @@ var setupCharts = function(playerid) {
                 'points',
                 'score',
             ])
+            .showGroups(false)
             .sortBy(d => d.date)
             .order(d3.descending);
-
-
-
 
         dc.renderAll();
     });
