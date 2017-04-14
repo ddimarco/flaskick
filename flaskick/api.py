@@ -178,11 +178,13 @@ class PlayerMatchesResource(Resource):
         #     db.or_(Match.team1_id.in_(teams), Match.team2_id.in_(teams))).join(
         #         MatchDay, Match.matchday).order_by(MatchDay.date).all()
 
-        def get_partner(team):
-            if team.player1 == id:
-                return team.player2
+        def get_partner_id(team):
+            if team.player1_id == id:
+                return team.player2_id
+            elif team.player2_id == id:
+                return team.player1_id
             else:
-                return team.player1
+                return -1
 
         def make_entry(m, won):
             return {
@@ -190,7 +192,7 @@ class PlayerMatchesResource(Resource):
                 'date': m.matchday.date.isoformat(),
                 'crawl': m.crawling,
                 'points': m.points * (1 if won else -1),
-                'partner': get_partner(m.team1 if won else m.team2).id,
+                'partner': get_partner_id(m.team1 if won else m.team2),
                 'team': (m.team1 if won else m.team2).id,
                 'enemy_team': (m.team2 if won else m.team1).id,
             }
