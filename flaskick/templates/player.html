@@ -20,58 +20,66 @@
 {% endblock %}
 {% block content %}
 
-    <h1>{{player.name}}</h1>
+<h1>{{player.name}}</h1>
 
-    <ul class="list-group">
-        <li class="list-group-item">Points: {{player.stat.points}}</li>
-        <li class="list-group-item">Games played: {{matches_played}}</li>
-        <li class="list-group-item">Average Points won per Match: {{avg_points | round(2)}}</li>
-    </ul>
+<ul class="list-group">
+  <li class="list-group-item">Points: {{player.stat.points}}</li>
+  <li class="list-group-item">Games played: {{matches_played}}</li>
+  <li class="list-group-item">Average Points won per Match: {{avg_points | round(2)}}</li>
+</ul>
 
-    <div class="well">
-        <div id="chart-winratio">
-            <div>
-                <strong>Win/Lose Ratio</strong>
-                <a class="reset"
-                   href="javascript:env.winratioChart.filterAll();dc.redrawAll();"
-                   style="visibility: hidden;">reset</a>
-            </div>
-        </div>
-        <div id="chart-crawl">
-            <div>
-                <strong>Games with Crawling</strong>
-                <a class="reset"
-                   href="javascript:env.crawlChart.filterAll();dc.redrawAll();"
-                   style="visibility: hidden;">reset</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- <div class="col-sm-12">
-         <div class="well">
-         <div id="chart-timeline">
-         <div>
-         <strong>By time</strong>
-         <span class="reset" style="visibility: hidden;">
-         range: <span class="filter"></span>
-         </span>
-         <a class="reset"
-         href="javascript:env.lineChart.filterAll();env.dateRangeChart.filterAll();dc.redrawAll();"
+<div class="row">
+  <div id="chart-winratio">
+    <div>
+      <strong>Win/Lose Ratio</strong>
+      <a class="reset"
+         href="javascript:env.winratioChart.filterAll();dc.redrawAll();"
          style="visibility: hidden;">reset</a>
-         </div>
-         </div>
+    </div>
+  </div>
+  <div id="chart-crawl">
+    <div>
+      <strong>Games with Crawling</strong>
+      <a class="reset"
+         href="javascript:env.crawlChart.filterAll();dc.redrawAll();"
+         style="visibility: hidden;">reset</a>
+    </div>
+  </div>
 
-         <div id="chart-date-range">
-         </div>
-         </div>
-         </div> -->
+  <div id="chart-dayofweek">
+    <div>
+      <strong>Day of week</strong>
+      <a class="reset"
+         href="javascript:env.dayOfWeekChart.filterAll();dc.redrawAll();"
+         style="visibility: hidden;">reset</a>
+    </div>
+  </div>
+</div>
 
-<br>
-<br>
-    <h2>Teams</h2>
-    <ul class="list-group">
-    {% for team in teams %}
-        <li class="list-group-item">{{team.player1.name}} & {{team.player2.name}}</li>
-    {% endfor %}
-    </ul>
+<div id="chart-timeline" style="width:100%;">
+  <div>
+    <strong>Score development</strong>
+    <span class="reset" style="visibility: hidden;">
+      range: <span class="filter"></span>
+    </span>
+    <a class="reset"
+       href="javascript:env.lineChart.filterAll();env.dateRangeChart.filterAll();dc.redrawAll();"
+       style="visibility: hidden;">reset</a>
+  </div>
+</div>
+
+<div id="chart-date-range" style="width:100%;">
+</div>
+
+<table id="data-table" class="table table-hover">
+</table>
+
+<!-- <br>
+     <br>
+     <h2>Teams</h2>
+     <ul class="list-group">
+     {% for team in teams %}
+     <li class="list-group-item">{{team.player1.name}} & {{team.player2.name}}</li>
+     {% endfor %}
+     </ul> -->
 {% endblock %}

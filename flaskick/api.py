@@ -191,6 +191,7 @@ class PlayerMatchesResource(Resource):
                 'crawl': m.crawling,
                 'points': m.points * (1 if won else -1),
                 'partner': get_partner(m.team1 if won else m.team2).id,
+                'team': (m.team1 if won else m.team2).id,
                 'enemy_team': (m.team2 if won else m.team1).id,
             }
 
