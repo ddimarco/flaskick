@@ -1,0 +1,24 @@
+{
+  "name": "flaskick",
+  "authors": [
+    "Daniel Di Marco <d.dimarco@gmx.de>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "./flaskick/static/bower",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "moment": "^2.18.1",
+    "dcjs": "^2.1.4"
+  }
+}
