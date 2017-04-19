@@ -1,10 +1,24 @@
 var setupCharts = function(playerid) {
-    $.get('/api/playermatches/' + playerid, function(model_) {
+    $.when($.get('/api/playermatches/' + playerid), $.get('/api/teams')).done(function(model__, teamlist_) {
+
+        var model_ = model__[0];
+        var teamlist = teamlist_[0];
+
+        var teamid_map = {};
+        var partner_map = {};
+        for (var i = 0; i < teamlist.length; i++) {
+            var str = teamlist[i].p1;
+            if (teamlist[i].p2 != '') {
+                str += ' & ' + teamlist[i].p2;
+            }
+            teamid_map[teamlist[i].id] = str;
+        }
+
         // scaled y-axis, see https://github.com/dc-js/dc.js/issues/667
         function nonzero_min(chart) {
-            dc.override(chart, 'yAxisMin', function () {
-                var min = d3.min(chart.data(), function (layer) {
-                    return d3.min(layer.values, function (p) {
+            dc.override(chart, 'yAxisMin', function() {
+                var min = d3.min(chart.data(), function(layer) {
+                    return d3.min(layer.values, function(p) {
                         return p.y + p.y0;
                     });
                 });
@@ -30,7 +44,11 @@ var setupCharts = function(playerid) {
         });
         // FIXME: might be better to do this in backend
         model = model.sort(function(a, b) {
-            return a.date - b.date;
+            if (a.date == b.date) {
+                return a.id - b.id;
+            } else {
+                return a.date - b.date;
+            }
         });
         var score = 1200;
         for (i = 0; i < model.length; i++) {
@@ -53,16 +71,23 @@ var setupCharts = function(playerid) {
         var dayFirst = dateDim.bottom(1)[0].date;
         var dayLast = dateDim.top(1)[0].date;
 
-        // FIXME: this only displays the max points per day
-        var scoreGroup = dateDim.group().reduce(
+        // HACK to show all games per day
+        var scoreDim = env.ndx.dimension(
+            function(d) {
+                var v = d.date.add(d.id, 'seconds');
+                return v;
+            }
+        );
+
+        // FIXME: this ignores the other filters
+        var scoreGroup = scoreDim.group().reduce(
             function(p, v, nf) {
                 // add
-                return Math.max(p, v.score);
+                return v.score;
             },
             function(p, v, nf) {
                 // remove
-                // FIXME
-                return Math.max(p, v.score);
+                return v.score;
             },
             function() {
                 // initial
@@ -70,7 +95,7 @@ var setupCharts = function(playerid) {
             });
         env.lineChart
             .rangeChart(env.dateRangeChart)
-            .dimension(dateDim)
+            .dimension(scoreDim)
             .group(scoreGroup)
             .renderArea(true)
             .height(200)
@@ -82,7 +107,7 @@ var setupCharts = function(playerid) {
             .yAxisPadding(50)
             .xAxisPadding(50)
             .yAxisLabel("", 10)
-            .renderDataPoints(true)
+            .renderDataPoints(false)
             //.legend(dc.legend())
             // .controlsUseVisibility(true)
             .title(function(d) {
@@ -92,7 +117,7 @@ var setupCharts = function(playerid) {
         env.dateRangeChart
             .height(75)
             .elasticY(true)
-            .dimension(dateDim)
+            .dimension(scoreDim)
             .group(scoreGroup)
             .centerBar(false)
             .gap(1)
@@ -101,6 +126,7 @@ var setupCharts = function(playerid) {
             .xUnits(d3.time.weeks)
             .alwaysUseRounding(true)
             .controlsUseVisibility(true)
+            .yAxisLabel("", 10)
             .yAxis().ticks(0);
 
         var wonDim = env.ndx.dimension(d => d.won);
@@ -139,7 +165,7 @@ var setupCharts = function(playerid) {
                 }
                 return Math.floor(d.value / all.value() * 100) + "%";
             })
-        .width(300)
+            .width(300)
             .height(140)
             .innerRadius(25)
             .cx(70).cy(70)
@@ -170,15 +196,18 @@ var setupCharts = function(playerid) {
             .group(function(d) {
                 return d.date;
             })
-            .columns([
-                {
+            .columns([{
                     label: 'Date',
                     format: function(d) {
                         return d.date.format('ll');
                     }
+                }, {
+                    label: 'Team',
+                    format: d => teamid_map[d.team]
+                }, {
+                    label: 'Opponents',
+                    format: d => teamid_map[d.enemy_team]
                 },
-                'team',
-                'enemy_team',
                 'points',
                 'score',
             ])
@@ -189,63 +218,69 @@ var setupCharts = function(playerid) {
 
         var enemyTeamDim = env.ndx.dimension(d => d.enemy_team);
         var teamAddFunc = function(p, v, nf) {
-                // add
-                p.count++;
-                if (v.won) {
-                    p.wins++;
-                }
-                p.points_made += v.points;
+            p.count++;
+            p.label = teamid_map[v.team];
+            if (v.won) {
+                p.wins++;
+            }
+            p.points_made += v.points;
 
-                return p;
+            return p;
+        };
+        var enemyTeamAddFunc = function(p, v, nf) {
+            p.count++;
+            p.label = teamid_map[v.enemy_team];
+            if (v.won) {
+                p.wins++;
+            }
+            p.points_made += v.points;
+
+            return p;
         };
         var teamRemFunc = function(p, v, nf) {
-                // remove
-                p.count--;
-                if (v.won) {
-                    p.wins--;
-                }
-                p.points_made -= v.points;
-                return p;
+            p.count--;
+            if (v.won) {
+                p.wins--;
+            }
+            p.points_made -= v.points;
+            return p;
         };
-        var teamInitFunc =             function() {
-                // initial
-                return {
-                    count: 0,
-                    wins: 0,
-                    points_made: 0
-                };
+        var teamInitFunc = function() {
+            return {
+                label: '',
+                count: 0,
+                wins: 0,
+                points_made: 0
+            };
         };
         var enemyTeamGroup = enemyTeamDim.group().reduce(
-            teamAddFunc, teamRemFunc, teamInitFunc);
+            enemyTeamAddFunc, teamRemFunc, teamInitFunc);
 
         env.enemiesChart
             .height(400)
             .dimension(enemyTeamDim)
             .group(enemyTeamGroup)
-
             // x value
             .keyAccessor(p => p.value.points_made)
             // y value
             .valueAccessor(p => p.value.wins / p.value.count)
             .radiusValueAccessor(p => p.value.count)
-
             .x(d3.scale.linear().domain([-2500, 2500]))
             .y(d3.scale.linear().domain([-100, 100]))
             .maxBubbleRelativeSize(0.3)
             .r(d3.scale.linear().domain([0, 500]))
             .elasticX(true)
             .elasticY(true)
-
             .yAxisPadding(0.1)
             .xAxisPadding(10)
             .renderHorizontalGridLines(true)
             .renderVerticalGridLines(true)
-
+            .label(p => p.value.label)
             .title(function(d) {
-                return d.value.wins + "/" + d.value.count + " won, "
-                    + d.value.points_made + " points";
+                return d.value.label + '\n' + d.value.wins + "/" + d.value.count + " won, " +
+                    d.value.points_made + " points";
             })
-            // // FIXME: why not displayed?
+            // // FIXME: why is this not displayed?
             // .xAxisLabel("Points", 10)
             // .yAxisLabel("Win Ratio", 10)
             // .renderLabel(true)
@@ -253,34 +288,31 @@ var setupCharts = function(playerid) {
         ;
 
 
-        var partnerDim = env.ndx.dimension(d => d.partner);
-        var partnerGroup = partnerDim.group().reduce(teamAddFunc, teamRemFunc, teamInitFunc);
+        var teamDim = env.ndx.dimension(d => d.team);
+        var teamGroup = teamDim.group().reduce(teamAddFunc, teamRemFunc, teamInitFunc);
         env.partnersChart
             .height(400)
-            .dimension(partnerDim)
-            .group(partnerGroup)
-
+            .dimension(teamDim)
+            .group(teamGroup)
             // x value
             .keyAccessor(p => p.value.points_made)
             // y value
             .valueAccessor(p => p.value.wins / p.value.count)
             .radiusValueAccessor(p => p.value.count)
-
             .x(d3.scale.linear().domain([-2500, 2500]))
             .y(d3.scale.linear().domain([-100, 100]))
             .maxBubbleRelativeSize(0.3)
             .r(d3.scale.linear().domain([0, 500]))
             .elasticX(true)
             .elasticY(true)
-
             .yAxisPadding(0.1)
             .xAxisPadding(10)
             .renderHorizontalGridLines(true)
             .renderVerticalGridLines(true)
-
+            .label(p => p.value.label)
             .title(function(d) {
-                return d.value.wins + "/" + d.value.count + " won, "
-                    + d.value.points_made + " points";
+                return d.value.label + '\n' + d.value.wins + "/" + d.value.count + " won, " +
+                    d.value.points_made + " points";
             })
             // // FIXME: why not displayed?
             // .xAxisLabel("Points", 10)

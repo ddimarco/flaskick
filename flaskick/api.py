@@ -113,7 +113,15 @@ class TeamsResource(Resource):
             teams = Team.query.join(TeamStat, Team.stat).filter(
                 Team.id.in_(filter_ids)).order_by(TeamStat.points.desc()).all()
         print('returning %i teams' % len(teams))
-        return {'data': [t.to_json for t in teams]}
+        # return {'data': [t.to_json for t in teams]}
+
+        def make_entry(team):
+            return {
+                'id': team.id,
+                'p1': team.player1.name,
+                'p2': team.player2.name if team.player2 is not None else ''
+            }
+        return [make_entry(team) for team in teams]
 
 
 class TeamResource(Resource):
@@ -188,11 +196,12 @@ class PlayerMatchesResource(Resource):
 
         def make_entry(m, won):
             return {
+                'id': m.id,
                 'won': won,
                 'date': m.matchday.date.isoformat(),
                 'crawl': m.crawling,
                 'points': m.points * (1 if won else -1),
-                'partner': get_partner_id(m.team1 if won else m.team2),
+                # 'partner': get_partner_id(m.team1 if won else m.team2),
                 'team': (m.team1 if won else m.team2).id,
                 'enemy_team': (m.team2 if won else m.team1).id,
             }
