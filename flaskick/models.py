@@ -254,9 +254,9 @@ def import_dump(data):
     def _update_team_stat(team, difference):
         team.stat.points += difference
         team.player1.stat.points += difference
-        print ("adding %s points to %s" % (difference, team.player1.name))
+        # print ("adding %s points to %s" % (difference, team.player1.name))
         if team.player2:
-            print ("adding %s points to %s" % (difference, team.player2.name))
+            # print ("adding %s points to %s" % (difference, team.player2.name))
             team.player2.stat.points += difference
 
     for match in data['matches']:

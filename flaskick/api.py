@@ -10,18 +10,17 @@ from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat,
 from flaskick.kicker_scraper import download_and_parse_date
 
 import datetime
-import time
 
 
 api = Api(app)
 
-import yaml
-def fake_dl(date):
-   fn = date.strftime('data_new/%Y%m%d.yaml')
-   with open(fn, 'r') as infile:
-       return yaml.load(infile)
+# import yaml
+# def fake_dl(date):
+#    fn = date.strftime('data_new/%Y%m%d.yaml')
+#    with open(fn, 'r') as infile:
+#        return yaml.load(infile)
 
-FIRST = datetime.date(year=2015, month=10, day=9)
+FIRST = datetime.date(year=2015, month=9, day=2)
 
 @app.route('/_db_refresh')
 def _db_refresh():
@@ -29,8 +28,7 @@ def _db_refresh():
     today = datetime.date.today()
     last_matchday = MatchDay.query.order_by(MatchDay.date.desc()).first()
     last_date_in_db = last_matchday.date if last_matchday else FIRST
-    # FIXME this is for development
-    dlfunc = fake_dl
+    dlfunc = download_and_parse_date
     # always update last day in db
     import_dump(dlfunc(last_date_in_db))
 

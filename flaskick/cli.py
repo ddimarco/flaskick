@@ -64,11 +64,13 @@ def scrape(date, outdir):
     while True:
         next_url = 'http://www.kicker.cool' + data['next_day_url']
         fname = os.path.join(outdir, data['date'].strftime('%Y%m%d.yaml'))
+        if os.path.isfile(fname):
+            break
         with open(fname, 'w') as outfile:
             yaml.safe_dump(data, outfile)
         time.sleep(2)
         data = download_and_parse_url(next_url)
-        if data.date > datetime.date.today():
+        if data['date'] > datetime.date.today():
             break
 
 
