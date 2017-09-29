@@ -2,13 +2,51 @@ import math
 
 import dateutil.parser
 #import pandas as pd
-from flask import request
+from flask import request, jsonify
 
 from flask_restful import Api, Resource, reqparse
 from flaskick.app import app, db
-from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat
+from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat, import_matches_from_path, import_dump
+from flaskick.kicker_scraper import download_and_parse_date
+
+import datetime
+import time
+
 
 api = Api(app)
+
+import yaml
+def fake_dl(date):
+   fn = date.strftime('data_new/%Y%m%d.yaml')
+   with open(fn, 'r') as infile:
+       return yaml.load(infile)
+
+FIRST = datetime.date(year=2015, month=10, day=9)
+
+@app.route('/_db_refresh')
+def _db_refresh():
+    app.stamp = datetime.datetime.now()
+    today = datetime.date.today()
+    last_matchday = MatchDay.query.order_by(MatchDay.date.desc()).first()
+    last_date_in_db = last_matchday.date if last_matchday else FIRST
+    # FIXME this is for development
+    dlfunc = fake_dl
+    # always update last day in db
+    import_dump(dlfunc(last_date_in_db))
+
+    if last_date_in_db < today:
+        next_day = last_date_in_db + datetime.timedelta(days=1)
+        while next_day <= today:
+            import_dump(dlfunc(next_day))
+            next_day = next_day + datetime.timedelta(days=1)
+
+    return jsonify(msg="done")
+
+@app.route('/_db_state')
+def _db_state():
+    return jsonify(
+        state="Refreshing...",
+        stamp="%s" % app.stamp if app.stamp else "")
 
 
 class MatchDaysResource(Resource):
@@ -206,69 +244,70 @@ class PlayerMatchesResource(Resource):
                 'enemy_team': (m.team2 if won else m.team1).id,
             }
 
+        # FIXME needs to be sorted properly, otherwise (on last day) points will not be correct
         dcmodel = [make_entry(m, True) for m in won_matches
                    ] + [make_entry(m, False) for m in lost_matches]
 
         return dcmodel
 
 
-class PlayerStatisticsResource(Resource):
-    def get(self, id):
-        # FIXME: keep this data in db table
-        player = Player.query.get(id)
-        teams = db.session.query(Team.id).filter(
-            db.or_(Team.player1.id == id, Team.player2.id == id)).subquery()
-        # team 1 is always the winning one
-        won_matches = Match.query.filter(Match.team1.in_(teams)).all()
-        lost_matches = Match.query.filter(Match.team2.in_(teams)).all()
-        matches_played = len(won_matches) + len(lost_matches)
+# class PlayerStatisticsResource(Resource):
+#     def get(self, id):
+#         # FIXME: keep this data in db table
+#         player = Player.query.get(id)
+#         teams = db.session.query(Team.id).filter(
+#             db.or_(Team.player1.id == id, Team.player2.id == id)).subquery()
+#         # team 1 is always the winning one
+#         won_matches = Match.query.filter(Match.team1.in_(teams)).all()
+#         lost_matches = Match.query.filter(Match.team2.in_(teams)).all()
+#         matches_played = len(won_matches) + len(lost_matches)
 
-        made_crawl = Match.query.filter(
-            Match.team1.in_(teams), Match.crawling).all()
-        did_crawl = Match.query.filter(Match.team2.in_(teams),
-                                       Match.crawling).all()
+#         made_crawl = Match.query.filter(
+#             Match.team1.in_(teams), Match.crawling).all()
+#         did_crawl = Match.query.filter(Match.team2.in_(teams),
+#                                        Match.crawling).all()
 
-        points_sum = player.stat.points
-        avg_points = float(points_sum - 1200) / float(matches_played)
+#         points_sum = player.stat.points
+#         avg_points = float(points_sum - 1200) / float(matches_played)
 
-        all_matches = Match.query.filter(
-            db.or_(Match.team1.in_(teams), Match.team2.in_(teams))).join(
-                MatchDay, Match.matchday).order_by(MatchDay.date).all()
+#         all_matches = Match.query.filter(
+#             db.or_(Match.team1.in_(teams), Match.team2.in_(teams))).join(
+#                 MatchDay, Match.matchday).order_by(MatchDay.date).all()
 
-        won_ids = [m.id for m in won_matches]
-        lost_ids = [m.id for m in lost_matches]
-        points_hist = []
-        points = 1200
-        matchdays = []
-        for m in all_matches:
-            if m.id in won_ids:
-                points += m.points
-            elif m.id in lost_ids:
-                points -= m.points
-            else:
-                raise RuntimeError('ERROR! you messed up!')
-            points_hist.append(points)
-            matchdays.append(m.matchday.date.isoformat())
+#         won_ids = [m.id for m in won_matches]
+#         lost_ids = [m.id for m in lost_matches]
+#         points_hist = []
+#         points = 1200
+#         matchdays = []
+#         for m in all_matches:
+#             if m.id in won_ids:
+#                 points += m.points
+#             elif m.id in lost_ids:
+#                 points -= m.points
+#             else:
+#                 raise RuntimeError('ERROR! you messed up!')
+#             points_hist.append(points)
+#             matchdays.append(m.matchday.date.isoformat())
 
-        res = {
-            'data': {
-                'attributes': {
-                    'name': player.name,
-                    'matchesplayed': len(won_matches) + len(lost_matches),
-                    'matcheswon': len(won_matches),
-                    'matcheslost': len(lost_matches),
-                    'madecrawl': len(made_crawl),
-                    'didcrawl': len(did_crawl),
-                    'points': points_sum,
-                    'avgpoints': avg_points,
-                    'pointshist': points_hist,  #[-100:],
-                    'matchdays': matchdays  #[-100:]
-                },
-                'type': 'statistic',
-                'id': id
-            }
-        }
-        return res
+#         res = {
+#             'data': {
+#                 'attributes': {
+#                     'name': player.name,
+#                     'matchesplayed': len(won_matches) + len(lost_matches),
+#                     'matcheswon': len(won_matches),
+#                     'matcheslost': len(lost_matches),
+#                     'madecrawl': len(made_crawl),
+#                     'didcrawl': len(did_crawl),
+#                     'points': points_sum,
+#                     'avgpoints': avg_points,
+#                     'pointshist': points_hist,  #[-100:],
+#                     'matchdays': matchdays  #[-100:]
+#                 },
+#                 'type': 'statistic',
+#                 'id': id
+#             }
+#         }
+#         return res
 
 
 class TeamStatisticsResource(Resource):
@@ -341,7 +380,8 @@ api.add_resource(
     '/api/players/by-name/<string:name>',
     methods=['GET'])
 
-api.add_resource(
-    PlayerStatisticsResource, '/api/statistics/<int:id>', methods=['GET'])
+# api.add_resource(
+#     PlayerStatisticsResource, '/api/statistics/<int:id>', methods=['GET'])
 api.add_resource(
     TeamStatisticsResource, '/api/teamstatistics/<int:id>', methods=['GET'])
+

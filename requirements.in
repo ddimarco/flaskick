@@ -3,3 +3,4 @@ flask_restful
 flask_sqlalchemy
 pyyaml
 #pandas
+beautifulsoup4
