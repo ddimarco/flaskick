@@ -45,6 +45,7 @@ def player(pid):
     all_matches = Match.query.filter(
         db.or_(Match.team1_id.in_(teams), Match.team2_id.in_(teams))).join(
             MatchDay, Match.matchday).order_by(MatchDay.date).all()
+    first_matchday = all_matches[0].matchday.date
 
     won_ids = [m.id for m in won_matches]
     lost_ids = [m.id for m in lost_matches]
@@ -87,5 +88,6 @@ def player(pid):
         matches_played=matches_played,
         made_crawl=made_crawl,
         did_crawl=did_crawl,
+        first_matchday=first_matchday
         # dcmodel=dcmodel
     )

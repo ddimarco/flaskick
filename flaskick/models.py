@@ -42,6 +42,8 @@ class PlayerStat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player = db.relationship('Player', uselist=False, back_populates='stat')
     points = db.Column(db.Integer, nullable=False)
+    last_match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
+    last_match = db.relationship('Match')
 
 
 class Team(db.Model):
@@ -282,6 +284,13 @@ def import_dump(data):
             kicker_id=kicker_id,
             points=difference)
         db.session.add(match)
+
+        def _add_match_to_players(team):
+            team.player1.stat.last_match = match
+            if team.player2:
+                team.player2.stat.last_match = match
+        _add_match_to_players(winner)
+        _add_match_to_players(loser)
 
     db.session.commit()
 
