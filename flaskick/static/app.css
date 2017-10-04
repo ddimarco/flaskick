@@ -1,16 +1,79 @@
-tr.versusRow > td {
-    font-size: 1.4em;
-    text-align: center;
-}
-tr.scoreRow > td {
-    padding-bottom: 1.2em;
-    font-size: 1.6em;
-    text-align: center;
-}
 h2 {
     padding-bottom: .4em;
 }
-#sidebar {
+
+#main {
+    padding-right: 40px;
+}
+
+.sidebar {
     overflow-x: hidden;
     overflow-y: auto;
+    border-left: 1px solid #ddd;
+    padding-left: 20px;
+}
+
+.match-list {
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    list-style-type: none;
+}
+
+.match {
+    position: relative;
+    float: left;
+    margin-bottom: 20px;
+}
+
+.team {
+    border-top: 5px solid;
+    border-color: #F0765E;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.winner-team {
+    border-color: #ACC86B;
+    margin-right: 20px;
+}
+
+.match-score {
+    background: #FFFFFF;
+    width: 56px;
+    height: 56px;
+    text-align: center;
+    z-index: 2;
+    position: absolute;
+    top: 20px;
+    left: calc(50% - 28px);
+    border-radius: 100%;
+    justify-content: center;
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 8px #000;
+}
+
+.match-score-difference {
+    color: #ACC86B;
+    position: relative;
+}
+
+.user-image {
+    display: inline-block;
+}
+
+.matchday-header {
+    clear: both;
+}
+
+.ranking-table>tbody>tr>td {
+    padding-left: 10px;
+    justify-content: center;
+    padding-bottom: 10px;
+}
+
+.ranking-score {
+    font-size: 18px;
 }
