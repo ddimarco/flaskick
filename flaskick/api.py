@@ -1,26 +1,21 @@
 import math
 
 import dateutil.parser
-#import pandas as pd
-from flask import request, jsonify
+from flask import request, jsonify, send_file
 
 from flask_restful import Api, Resource, reqparse
 from flaskick.app import app, db
 from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat, import_matches_from_path, import_dump
 from flaskick.kicker_scraper import download_and_parse_date
+from flaskick.avatars import generate_or_load_avatar
 
 import datetime
-
+import magic
 
 api = Api(app)
 
-# import yaml
-# def fake_dl(date):
-#    fn = date.strftime('data_new/%Y%m%d.yaml')
-#    with open(fn, 'r') as infile:
-#        return yaml.load(infile)
-
 FIRST = datetime.date(year=2015, month=9, day=2)
+
 
 @app.route('/_db_refresh')
 def _db_refresh():
@@ -40,11 +35,19 @@ def _db_refresh():
 
     return jsonify(msg="done")
 
+
 @app.route('/_db_state')
 def _db_state():
     return jsonify(
-        state="Refreshing...",
-        stamp="%s" % app.stamp if app.stamp else "")
+        state="Refreshing...", stamp="%s" % app.stamp if app.stamp else "")
+
+
+@app.route('/player/<int:pid>/avatar')
+def player_avatar(pid):
+    player = Player.query.get(pid)
+    avatar_fname = generate_or_load_avatar(player)
+    mime = magic.Magic(mime=True)
+    return send_file(avatar_fname, mime.from_file(avatar_fname))
 
 
 class MatchDaysResource(Resource):
@@ -146,10 +149,10 @@ class TeamsResource(Resource):
             teams = Team.query.join(
                 TeamStat, Team.stat).order_by(TeamStat.points.desc()).all()
         else:
-            teams = Team.query.join(TeamStat, Team.stat).filter(
-                Team.id.in_(filter_ids)).order_by(TeamStat.points.desc()).all()
+            teams = Team.query.join(
+                TeamStat, Team.stat).filter(Team.id.in_(filter_ids)).order_by(
+                    TeamStat.points.desc()).all()
         print('returning %i teams' % len(teams))
-        # return {'data': [t.to_json for t in teams]}
 
         def make_entry(team):
             return {
@@ -157,6 +160,7 @@ class TeamsResource(Resource):
                 'p1': team.player1.name,
                 'p2': team.player2.name if team.player2 is not None else ''
             }
+
         return [make_entry(team) for team in teams]
 
 
@@ -189,11 +193,13 @@ class PlayersResource(Resource):
                 map(lambda s: int(s),
                     filter(lambda x: x, args.get('filter[id]').split(','))))
         if len(filter_ids) == 0:
-            players = Player.query.join(PlayerStat, Player.stat).order_by(
-                PlayerStat.points.desc()).all()
+            players = Player.query.join(
+                PlayerStat,
+                Player.stat).order_by(PlayerStat.points.desc()).all()
         else:
-            players = Player.query.join(PlayerStat, Player.stat).filter(
-                Player.id.in_(filter_ids)).order_by(
+            players = Player.query.join(
+                PlayerStat,
+                Player.stat).filter(Player.id.in_(filter_ids)).order_by(
                     PlayerStat.points.desc()).all()
         print('returning %i players' % len(players))
         return {'data': [p.to_json for p in players]}
@@ -218,6 +224,7 @@ class PlayerMatchesResource(Resource):
             db.or_(Team.player1_id == id, Team.player2_id == id)).subquery()
         won_matches = Match.query.filter(Match.team1_id.in_(teams)).all()
         lost_matches = Match.query.filter(Match.team2_id.in_(teams)).all()
+
         # all_matches = Match.query.filter(
         #     db.or_(Match.team1_id.in_(teams), Match.team2_id.in_(teams))).join(
         #         MatchDay, Match.matchday).order_by(MatchDay.date).all()
@@ -242,7 +249,6 @@ class PlayerMatchesResource(Resource):
                 'enemy_team': (m.team2 if won else m.team1).id,
             }
 
-        # FIXME needs to be sorted properly, otherwise (on last day) points will not be correct
         dcmodel = [make_entry(m, True) for m in won_matches
                    ] + [make_entry(m, False) for m in lost_matches]
 
@@ -382,4 +388,3 @@ api.add_resource(
 #     PlayerStatisticsResource, '/api/statistics/<int:id>', methods=['GET'])
 api.add_resource(
     TeamStatisticsResource, '/api/teamstatistics/<int:id>', methods=['GET'])
-

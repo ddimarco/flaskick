@@ -57,7 +57,7 @@
             <tbody>
               {% for player in players %}
               <tr>
-                <td><a href="/player/{{player.id}}"><img src="{{player.avatar_url}}"/></a></td>
+                <td><a href="/player/{{player.id}}"><img src="/player/{{player.id}}/avatar"/></a></td>
                 <td><a href="/player/{{player.id}}">{{player.name}}</a>
                     <p>{{player.stat.points}}</p>
                 </td>

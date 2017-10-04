@@ -4,3 +4,4 @@ flask_sqlalchemy
 pyyaml
 beautifulsoup4
 requests
+python-magic

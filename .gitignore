@@ -1,7 +1,10 @@
 *.pyc
 bin/
 lib/
+local/
 share/
 *.egg-info/
 include/
 kicker.db
+flaskick/static/bower/
+flaskick/static/avatars/

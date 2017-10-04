@@ -17,6 +17,7 @@ itsdangerous==0.24        # via flask
 jinja2==2.9.5             # via flask
 markupsafe==1.0           # via jinja2
 python-dateutil==2.6.0    # via aniso8601
+python-magic==0.4.13
 pytz==2016.10             # via flask-restful
 pyyaml==3.12
 requests==2.18.4

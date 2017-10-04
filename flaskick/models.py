@@ -5,6 +5,7 @@ import os
 import yaml
 
 from flaskick.app import db
+from flaskick.avatars import avatar_filename
 
 
 class Player(db.Model):
@@ -234,6 +235,10 @@ def import_dump(data):
     # add new players
     for name, img_link in data['avatars'].iteritems():
         player_qry = Player.query.filter(Player.name == name).first()
+        # if we already have an avatar for this player, remove it
+        avatar_fname = avatar_filename(name)
+        if os.path.isfile(avatar_fname):
+            os.unlink(avatar_fname)
         if not player_qry:
             plr = Player(name=name, avatar_url=img_link)
             db.session.add(plr)
@@ -252,15 +257,13 @@ def import_dump(data):
         md_qry = MatchDay(date=date)
         db.session.add(md_qry)
 
-    # add matches
     def _update_team_stat(team, difference):
         team.stat.points += difference
         team.player1.stat.points += difference
-        # print ("adding %s points to %s" % (difference, team.player1.name))
         if team.player2:
-            # print ("adding %s points to %s" % (difference, team.player2.name))
             team.player2.stat.points += difference
 
+    # add matches
     for match in data['matches']:
         kicker_id = int(match['match_id'])
         m_qry = Match.query.filter(Match.kicker_id == kicker_id).first()
