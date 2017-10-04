@@ -6,12 +6,6 @@ from bs4 import BeautifulSoup
 import requests
 import datetime
 
- # r = requests.get('https://ungif.apps.railslabs.com/ungif?url=http://freestockgallery.de/hintergrund/rote-backsteinwand-939.thumb_large.jpg&size=80x80', stream=True)
- # if r.status_code == 200:
- #     with open('/tmp/img.jpg', 'wb') as f:
- #         r.raw.decode_content = True
- #         shutil.copyfileobj(r.raw,f)
-
 def download_and_parse_date(date):
     url = ymd_date_to_url(date.year, date.month, date.day)
     return download_and_parse_url(url)
@@ -19,9 +13,6 @@ def download_and_parse_date(date):
 
 def download_and_parse_url(url):
     print('downloading site from %s' % url)
-    # with urllib.request.urlopen(url) as response:
-    #     html = response.read()
-    #     return extract_kicker_day(html)
     r = requests.get(url)
     return extract_kicker_day(r.text)
 
@@ -93,13 +84,3 @@ def extract_kicker_day(html_doc):
     match_dicts.sort(key=lambda d: d['match_id'])
     return {'date': date, 'next_day_url': next_day_url, 'matches': match_dicts, 'avatars': avatars}
 
-def main():
-    with open('/tmp/kicker.html', 'r') as infile:
-        html_doc = infile.read()
-
-    day = extract_kicker_day(html_doc)
-    print(day)
-
-
-if __name__ == '__main__':
-    main()
