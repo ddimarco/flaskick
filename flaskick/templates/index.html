@@ -7,7 +7,7 @@
 <ul>
     <div class="match-list">
 
-        {% for match in matchday.matches %}
+        {% for match in matchday.matches | reverse %}
         <li class="match">
             <div class="team winner-team">
                 <span class="team-member" title="{{match.team1.player1.name}}">
