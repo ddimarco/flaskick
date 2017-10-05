@@ -130,15 +130,15 @@ var setupCharts = function(playerid) {
             .yAxisLabel("", 10)
             .yAxis().ticks(0);
 
-        var wonDim = env.ndx.dimension(d => d.won);
+        var wonDim = env.ndx.dimension(d => d.won ? 'win' : 'loss');
         var wonGroup = wonDim.group();
 
-        var crawlDim = env.ndx.dimension(d => d.crawl);
+        var crawlDim = env.ndx.dimension(d => d.crawl ? 'crawl' : 'no crawl');
         var crawlGroup = crawlDim.group();
 
         env.winratioChart
             .colors(d3.scale.ordinal()
-                .domain([true, false])
+                .domain(['win', 'loss'])
                 .range(['#1f77b4', '#d62728']))
             .label(function(d) {
                 if (env.winratioChart.hasFilter() && !env.winratioChart.hasFilter(d.key)) {
@@ -158,7 +158,7 @@ var setupCharts = function(playerid) {
 
         env.crawlChart
             .colors(d3.scale.ordinal()
-                .domain([true, false])
+                .domain(['crawl', 'no crawl'])
                 .range(['#1f77b4', '#d62728']))
             .label(function(d) {
                 if (env.crawlChart.hasFilter() && !env.crawlChart.hasFilter(d.key)) {
