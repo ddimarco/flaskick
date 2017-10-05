@@ -27,10 +27,10 @@
           <li>
             <a href="/">History</a>
           </li>
+          <li>
+              <a href="/players">All Time Ranking</a>
+          </li>
           <!-- <li>
-               <a href="/players">Players</a>
-               </li>
-               <li>
                <a href="/teams">Teams</a>
                </li> -->
         </ul>
@@ -52,7 +52,7 @@
           {% block content %}{% endblock %}
         </div>
         <div class="sidebar" class="col-md-2">
-          <h3>Player Ranking</h3>
+          <h3>Current Ranking</h3>
           <table class="ranking-table">
             <tbody>
               {% for player in players %}

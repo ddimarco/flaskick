@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Flaskick - Player List {% endblock %}
+{% block scripts %}{% endblock %}
+{% block content %}
+
+<h1>All Time Ranking</h1>
+
+<table class="table">
+    <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Win Quota</th>
+        <th>Games Played</th>
+        <th>Points</th>
+    </tr>
+    {% for player,pstat in allplayers %}
+    <tr>
+        <td>{{loop.index}}</td>
+        <td>
+            <a href="/player/{{player.id}}">
+            <img src="/player/{{player.id}}/avatar"/>
+            {{player.name}}
+            </a>
+        </td>
+        <td>{{pstat.win_quota  | round(2)}} %</td>
+        <td>{{pstat.matches_played}}</td>
+        <td>{{player.stat.points}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

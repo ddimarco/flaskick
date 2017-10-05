@@ -3,6 +3,14 @@ from flask import render_template
 from app import app, db
 from models import Match, MatchDay, Player, PlayerStat, Team
 
+import datetime
+
+def get_players_for_ranking():
+    latest_matchday = datetime.date.today() - datetime.timedelta(days=14)
+    players = Player.query.join(PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
+    # TODO: should put this as a SQL query
+    players = filter(lambda p: p.stat.last_match.matchday.date >= latest_matchday, players)
+    return players
 
 @app.route('/')
 def index():
@@ -10,20 +18,36 @@ def index():
     page_size = 10
     matchdays = MatchDay.query.order_by(
         MatchDay.date.desc())[start_idx:start_idx + page_size]
-    players = Player.query.join(
-        PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
     return render_template(
         'index.html',
         matchdays=filter(lambda md: len(md.matches) > 0, matchdays),
-        players=players)
+        players=get_players_for_ranking())
 
+@app.route('/players')
+def player_list():
+    allplayers = Player.query.join(PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
+
+
+    pstats = []
+    for p in allplayers:
+        teams = db.session.query(Team.id).filter(
+            db.or_(Team.player1 == p, Team.player2 == p)).subquery()
+        won_matches = Match.query.filter(Match.team1_id.in_(teams)).all()
+        lost_matches = Match.query.filter(Match.team2_id.in_(teams)).all()
+        matches_played = len(won_matches) + len(lost_matches)
+        win_quota = float(len(won_matches)) / float(matches_played)
+
+        pstat = {
+            'matches_played': matches_played,
+            'win_quota': win_quota * 100.,
+        }
+        pstats.append(pstat)
+
+    return render_template('player-list.html', players=get_players_for_ranking(), allplayers=zip(allplayers, pstats))
 
 @app.route('/player/<int:pid>')
 def player(pid):
     player = Player.query.get(pid)
-
-    players = Player.query.join(
-        PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
     teams = db.session.query(Team.id).filter(
         db.or_(Team.player1_id == pid, Team.player2_id == pid)).subquery()
 
@@ -82,7 +106,7 @@ def player(pid):
     return render_template(
         'player.html',
         player=player,
-        players=players,
+        players=get_players_for_ranking(),
         teams=all_teams,
         avg_points=avg_points,
         matches_played=matches_played,
