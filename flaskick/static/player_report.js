@@ -1,4 +1,5 @@
 var setupCharts = function(playerid) {
+
     $.when($.get('/api/playermatches/' + playerid), $.get('/api/teams')).done(function(model__, teamlist_) {
 
         var model_ = model__[0];
@@ -321,6 +322,10 @@ var setupCharts = function(playerid) {
             // .renderTitles(true)
         ;
 
+        // hide loading animation
+        document.getElementById("page").style.display = "block";
+        document.getElementById("loading").style.display = "none";
+
         dc.renderAll();
     });
-}
+};
