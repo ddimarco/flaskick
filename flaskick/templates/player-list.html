@@ -5,7 +5,7 @@
 
 <h1>All Time Ranking</h1>
 
-<table class="table">
+<table class="table allplayers-table" style="width:75%;">
     <tr>
         <th>Rank</th>
         <th>Name</th>
@@ -13,9 +13,10 @@
         <th>Games Played</th>
         <th>Points</th>
     </tr>
+    <tbody>
     {% for player,pstat in allplayers %}
     <tr>
-        <td>{{loop.index}}</td>
+        <td class="allplayers-rank">{{loop.index}}</td>
         <td>
             <a href="/player/{{player.id}}">
             <img src="/player/{{player.id}}/avatar"/>
@@ -27,6 +28,7 @@
         <td>{{player.stat.points}}</td>
     </tr>
     {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}
