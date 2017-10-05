@@ -28,11 +28,11 @@
             <a href="/">History</a>
           </li>
           <li>
-              <a href="/players">All Time Ranking</a>
+              <a href="/players">Players</a>
           </li>
-          <!-- <li>
-               <a href="/teams">Teams</a>
-               </li> -->
+          <li>
+              <a href="/teams">Teams</a>
+          </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li>
@@ -57,7 +57,16 @@
             <tbody>
               {% for player in players %}
               <tr>
-                <td><a href="/player/{{player.id}}"><img src="/player/{{player.id}}/avatar"/></a></td>
+                <td>
+                    <a  href="/player/{{player.id}}">
+                    <div class="ranking-rank">
+                        <img src="/player/{{player.id}}/avatar"/>
+                        <div class="ranking-rank-overlay">
+                            {{loop.index}}
+                        </div>
+                    </div>
+                    </a>
+                </td>
                 <td><a href="/player/{{player.id}}">{{player.name}}</a>
                     <div class="ranking-score">
                         {{player.stat.points}}

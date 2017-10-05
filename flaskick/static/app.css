@@ -1,6 +1,7 @@
 h1 {
     padding-bottom: .4em;
 }
+
 h2 {
     padding-bottom: .4em;
 }
@@ -81,24 +82,55 @@ h2 {
     font-size: 18px;
 }
 
+.ranking-rank {
+    position: relative;
+    overflow: hidden;
+}
+
+.ranking-rank-overlay {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: 3;
+    font-size: 40px;
+    top: 0px;
+    text-align: center;
+    margin: auto;
+    background: #76AEC1;
+    color: #FFF;
+    transition: 0.5s;
+    opacity: 0;
+}
+
+.ranking-rank:hover .ranking-rank-overlay {
+    opacity: 1;
+}
+
 .allplayers-table>tbody>tr>td {
     vertical-align: middle;
     font-size: 24px;
+    text-decoration: none;
 }
+
+.allplayers-table>tbody>tr>td>a {
+    text-decoration: none;
+}
+
 .allplayers-rank {
-    /* font-size:40px; */
-    width:80px;
-    height:80px;
-    text-align:center;
+    width: 80px;
+    height: 80px;
+    text-align: center;
 }
 
 /* loading animation */
+
 #page {
     display: none;
 }
+
 #loading {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #3498db; /* Blue */
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #3498db;
     border-radius: 50%;
     width: 120px;
     height: 120px;
@@ -108,6 +140,10 @@ h2 {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

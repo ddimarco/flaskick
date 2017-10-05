@@ -1,7 +1,7 @@
 from flask import render_template
 
 from app import app, db
-from models import Match, MatchDay, Player, PlayerStat, Team
+from models import Match, MatchDay, Player, PlayerStat, Team, TeamStat
 
 import datetime
 
@@ -26,8 +26,6 @@ def index():
 @app.route('/players')
 def player_list():
     allplayers = Player.query.join(PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
-
-
     pstats = []
     for p in allplayers:
         teams = db.session.query(Team.id).filter(
@@ -36,7 +34,6 @@ def player_list():
         lost_matches = Match.query.filter(Match.team2_id.in_(teams)).all()
         matches_played = len(won_matches) + len(lost_matches)
         win_quota = float(len(won_matches)) / float(matches_played)
-
         pstat = {
             'matches_played': matches_played,
             'win_quota': win_quota * 100.,
@@ -44,6 +41,23 @@ def player_list():
         pstats.append(pstat)
 
     return render_template('player-list.html', players=get_players_for_ranking(), allplayers=zip(allplayers, pstats))
+
+@app.route('/teams')
+def team_list():
+    all_teams = Team.query.join(TeamStat, Team.stat).order_by(TeamStat.points.desc()).all()
+    # TODO: also show single player "teams"?
+    all_teams = filter(lambda t: t.player2 is not None, all_teams)
+    stats = []
+    for team in all_teams:
+        won_matches = Match.query.filter(Match.team1 == team).all()
+        lost_matches = Match.query.filter(Match.team2 == team).all()
+        matches_played = len(won_matches) + len(lost_matches)
+        win_quota = float(len(won_matches)) / float(matches_played)
+        stats.append({
+            'matches_played': matches_played,
+            'win_quota': win_quota * 100.,
+        })
+    return render_template('team-list.html', players=get_players_for_ranking(), allteams=zip(all_teams, stats))
 
 @app.route('/player/<int:pid>')
 def player(pid):

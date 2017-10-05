@@ -2,7 +2,7 @@
 {% block title %}Flaskick{% endblock %}
 {% block content %}
 {% for matchday in matchdays %}
-<h2 class="matchday-header">{{matchday.date.strftime('%a, %d. %b')}} <small>{{matchday.matches|length}} games</small></h2>
+<h2 class="matchday-header">{{matchday.date.strftime('%A, %d. %b')}} <small>{{matchday.matches|length}} games</small></h2>
 
 <ul>
     <div class="match-list">

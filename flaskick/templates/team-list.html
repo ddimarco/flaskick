@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Flaskick - Team List {% endblock %}
+{% block scripts %}{% endblock %}
+{% block content %}
+
+<h1>Team Ranking</h1>
+
+<table class="table allplayers-table" >
+    <tr>
+        <th>Rank</th>
+        <th>Names</th>
+        <th>Win Quota</th>
+        <th>Games Played</th>
+        <th>Points</th>
+    </tr>
+    <tbody>
+    {% for team,stat in allteams %}
+    <tr>
+        <td class="allplayers-rank">{{loop.index}}</td>
+        <td>
+            <a href="/player/{{team.player1.id}}">
+                <img src="/player/{{team.player1.id}}/avatar"/>
+            </a>
+            <a href="/player/{{team.player2.id}}">
+                <img src="/player/{{team.player2.id}}/avatar"/>
+            </a>
+
+            <a href="/player/{{team.player1.id}}">{{team.player1.name}}</a> & <a href="/player/{{team.player2.id}}">{{team.player2.name}}</a>
+        </td>
+        <td>{{stat.win_quota  | round(2)}} %</td>
+        <td>{{stat.matches_played}}</td>
+        <td>{{team.stat.points}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
