@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="/static/bower/dcjs/dc.min.css"/>
 <script src="/static/bower/dcjs/dc.min.js"></script>
 <script src="/static/bower/moment/min/moment.min.js"></script>
-
 <script src="/static/player_report.js"></script>
 <script>
  var env = {
@@ -26,7 +25,10 @@
     <ul class="list-group">
         <li class="list-group-item">Points: {{player.stat.points}}</li>
         <li class="list-group-item">Games played since {{first_matchday}}: {{matches_played}}</li>
-        <li class="list-group-item">Average Points won per Match: {{avg_points | round(2)}}</li>
+        <li class="list-group-item">Average points won per match: {{avg_points | round(2)}}</li>
+        <li class="list-group-item">All-time high: {{highest_points[0]}} ({{highest_points[1].strftime('%a, %d. %b %Y')}})</li>
+        <li class="list-group-item">All-time low: {{lowest_points[0]}} ({{lowest_points[1].strftime('%a, %d. %b %Y')}})</li>
+        <!-- TODO trend, siegesserien -->
     </ul>
     <div id="chart-timeline" style="width:100%;">
         <div>

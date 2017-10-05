@@ -90,6 +90,8 @@ def player(pid):
     points_hist = []
     points = 1200
     matchdays = []
+    lowest = (points, first_matchday)
+    highest = (points, first_matchday)
     for m in all_matches:
         if m.id in won_ids:
             points += m.points
@@ -100,22 +102,10 @@ def player(pid):
         points_hist.append(points)
         matchdays.append(m.matchday.date.isoformat())
 
-    def get_partner(match):
-        team = match.team1 if match.id in won_matches else match.team2
-        if team.player1 == pid:
-            return team.player2
-        else:
-            return team.player1
-
-    # contains all matches
-    # dcmodel = [{
-    #     'won': 1 if m.id in won_matches else 0,
-    #     'date': m.matchday.date.isoformat(),
-    #     'crawl': 1 if m.crawling else 0,
-    #     'points': m.points,
-    #     'partner': get_partner(m).id,
-    #     'enemy_team': (m.team2 if m.id in won_matches else m.team2).id,
-    # } for m in all_matches]
+        if points < lowest[0]:
+            lowest = (points, m.matchday.date)
+        if points > highest[0]:
+            highest = (points, m.matchday.date)
 
     return render_template(
         'player.html',
@@ -126,6 +116,7 @@ def player(pid):
         matches_played=matches_played,
         made_crawl=made_crawl,
         did_crawl=did_crawl,
-        first_matchday=first_matchday
-        # dcmodel=dcmodel
+        first_matchday=first_matchday,
+        lowest_points=lowest,
+        highest_points=highest,
     )
