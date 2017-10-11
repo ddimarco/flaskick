@@ -42,9 +42,11 @@ def reset():
 
 
 @cli.command()
-def serve():
+@click.option('--host', default='0.0.0.0')
+@click.option('--port', default=5000)
+def serve(host, port):
     db.create_all()
-    app.run()
+    app.run(host=host, port=port)
 
 
 @cli.command()
