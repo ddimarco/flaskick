@@ -5,3 +5,5 @@ pyyaml
 beautifulsoup4
 requests
 python-magic
+pagan
+click
