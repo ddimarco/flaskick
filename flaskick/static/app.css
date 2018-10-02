@@ -88,8 +88,8 @@ h2 {
 }
 
 .ranking-rank-overlay {
-    height: 100%;
-    width: 100%;
+    height: 60px;
+    width: 60px;
     position: absolute;
     z-index: 3;
     font-size: 40px;
@@ -100,6 +100,11 @@ h2 {
     color: #FFF;
     transition: 0.5s;
     opacity: 0;
+}
+
+.ranking-rank img {
+    height: 60px;
+    width: 60px;
 }
 
 .ranking-rank:hover .ranking-rank-overlay {
