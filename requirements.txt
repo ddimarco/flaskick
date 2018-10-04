@@ -23,7 +23,8 @@ python-magic==0.4.13
 pytz==2016.10             # via flask-restful
 pyyaml==3.12
 requests==2.18.4
-six==1.10.0               # via flask-restful, python-dateutil
+six==1.10.0               # via flask-restful, python-dateutil, trueskill
 sqlalchemy==1.1.6         # via flask-sqlalchemy
+trueskill==0.4.5
 urllib3==1.22             # via requests
 werkzeug==0.12.1          # via flask

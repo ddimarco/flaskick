@@ -71,8 +71,6 @@ class Team(db.Model):
         return {
             'type': 'team',
             'id': self.id,
-            # 'player1': self.player1,
-            # 'player2': self.player2
             'attributes': {
                 'points': self.stat.points
             },

@@ -15,6 +15,8 @@ import time
 import yaml
 import os
 
+import trueskill
+
 
 @click.group()
 def cli():
@@ -24,10 +26,6 @@ def cli():
 @cli.command()
 def test():
     pass
-
-
-# GAMES_YAML_PATH = '/home/dm/code/kicker-scraper/data'
-
 
 @cli.command("import")
 @click.argument("data-path")
@@ -55,6 +53,38 @@ def dbg():
         html = infile.read()
     data = extract_kicker_day(html)
     print(data)
+
+@cli.command()
+def ts():
+    from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat
+    matches = Match.query.join(MatchDay, Match.matchday).order_by(MatchDay.date)
+    ratings = {p.id: trueskill.Rating() for p in Player.query}
+
+    def _team_ratings(team):
+        rat = [ratings[team.player1_id]]
+        if team.player2:
+            rat.append(ratings[team.player2_id])
+        return rat
+    for m in matches:
+        won_team, lost_team = m.team1, m.team2
+        t1_ratings = _team_ratings(won_team)
+        t2_ratings = _team_ratings(lost_team)
+        q = trueskill.quality([t1_ratings, t2_ratings])
+        new_ratings_won, new_ratings_lost = trueskill.rate([t1_ratings, t2_ratings])
+        ratings[won_team.player1_id] = new_ratings_won[0]
+        if won_team.player2:
+            ratings[won_team.player2_id] = new_ratings_won[1]
+        ratings[lost_team.player1_id] = new_ratings_lost[0]
+        if lost_team.player2:
+            ratings[lost_team.player2_id] = new_ratings_lost[1]
+
+    playerids = sorted(ratings.keys(), key=lambda pid: trueskill.expose(ratings[pid]))
+    # for player_id, rating in ratings.iteritems():
+    for player_id in playerids:
+        rating = ratings[player_id]
+        player = Player.query.filter(Player.id == player_id).first()
+        print ("{}: {} {}".format(player.name.encode('utf-8'), rating,
+                                  trueskill.expose(rating)))
 
 
 @cli.command()
