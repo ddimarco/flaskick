@@ -1,15 +1,19 @@
 from flask import render_template
 
 from app import app, db
-from models import Match, MatchDay, Player, PlayerStat, Team, TeamStat
+from models import Match, MatchStatsKickerCool, MatchDay, Player, PlayerStatKickerCool, Team, TeamStatKickerCool
 
 import datetime
 
 def get_players_for_ranking():
-    latest_matchday = datetime.date.today() - datetime.timedelta(days=14)
-    players = Player.query.join(PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
+    # latest_matchday = datetime.date.today() - datetime.timedelta(days=14)
+    players = db.session.query(Player).join(PlayerStatKickerCool, Player.id == PlayerStatKickerCool.player_id).order_by(PlayerStatKickerCool.points.desc()).all()
+    # TODO: put in single query
+    for p in players:
+        s = PlayerStatKickerCool.query.filter(PlayerStatKickerCool.player == p).first()
+        p.points = s.points
     # TODO: should put this as a SQL query
-    players = filter(lambda p: p.stat.last_match.matchday.date >= latest_matchday, players)
+    # players = filter(lambda p: p.stat.last_match.matchday.date >= latest_matchday, players)
     return players
 
 @app.route('/')
@@ -18,14 +22,18 @@ def index():
     page_size = 10
     matchdays = MatchDay.query.order_by(
         MatchDay.date.desc())[start_idx:start_idx + page_size]
+    for md in matchdays:
+        for m in md.matches:
+            m.points = MatchStatsKickerCool.query.filter(MatchStatsKickerCool.match_id == m.id).first().points
     return render_template(
         'index.html',
         matchdays=filter(lambda md: len(md.matches) > 0, matchdays),
-        players=get_players_for_ranking())
+        players=get_players_for_ranking()
+    )
 
 @app.route('/players')
 def player_list():
-    allplayers = Player.query.join(PlayerStat, Player.stat).order_by(PlayerStat.points.desc()).all()
+    allplayers = Player.query.join(PlayerStatKickerCool, Player.id == PlayerStatKickerCool.player_id).order_by(PlayerStatKickerCool.points.desc()).all()
     pstats = []
     for p in allplayers:
         teams = db.session.query(Team.id).filter(
@@ -40,11 +48,12 @@ def player_list():
         }
         pstats.append(pstat)
 
-    return render_template('player-list.html', players=get_players_for_ranking(), allplayers=zip(allplayers, pstats))
+    return render_template('player-list.html', players=get_players_for_ranking(),
+                           allplayers=zip(allplayers, pstats))
 
 @app.route('/teams')
 def team_list():
-    all_teams = Team.query.join(TeamStat, Team.stat).order_by(TeamStat.points.desc()).all()
+    all_teams = Team.query.join(TeamStatKickerCool, Team.id == TeamStatKickerCool.team_id).order_by(TeamStatKickerCool.points.desc()).all()
     # TODO: also show single player "teams"?
     all_teams = filter(lambda t: t.player2 is not None, all_teams)
     stats = []
@@ -56,8 +65,10 @@ def team_list():
         stats.append({
             'matches_played': matches_played,
             'win_quota': win_quota * 100.,
+            'points': TeamStatKickerCool.query.filter(TeamStatKickerCool.team_id == team.id).first().points,
         })
-    return render_template('team-list.html', players=get_players_for_ranking(), allteams=zip(all_teams, stats))
+    return render_template('team-list.html',  players=get_players_for_ranking(),
+                           allteams=zip(all_teams, stats))
 
 @app.route('/player/<int:pid>')
 def player(pid):
@@ -110,7 +121,7 @@ def player(pid):
     return render_template(
         'player.html',
         player=player,
-        players=get_players_for_ranking(),
+        # players=get_players_for_ranking(),
         teams=all_teams,
         avg_points=avg_points,
         matches_played=matches_played,

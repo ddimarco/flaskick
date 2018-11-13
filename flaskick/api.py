@@ -5,7 +5,7 @@ from flask import request, jsonify, send_file
 
 from flask_restful import Api, Resource, reqparse
 from flaskick.app import app, db
-from flaskick.models import Match, MatchDay, Player, PlayerStat, Team, TeamStat, import_matches_from_path, import_dump
+from flaskick.models import Match, MatchDay, Player, PlayerStatKickerCool, Team, TeamStatKickerCool, import_matches_from_path, import_dump
 from flaskick.kicker_scraper import download_and_parse_date
 from flaskick.avatars import generate_or_load_avatar
 
@@ -147,11 +147,11 @@ class TeamsResource(Resource):
                     filter(lambda x: x, args.get('filter[id]').split(','))))
         if len(filter_ids) == 0:
             teams = Team.query.join(
-                TeamStat, Team.stat).order_by(TeamStat.points.desc()).all()
+                TeamStatKickerCool, Team.stat).order_by(TeamStatKickerCool.points.desc()).all()
         else:
             teams = Team.query.join(
-                TeamStat, Team.stat).filter(Team.id.in_(filter_ids)).order_by(
-                    TeamStat.points.desc()).all()
+                TeamStatKickerCool, Team.stat).filter(Team.id.in_(filter_ids)).order_by(
+                    TeamStatKickerCool.points.desc()).all()
         print('returning %i teams' % len(teams))
 
         def make_entry(team):
@@ -194,18 +194,18 @@ class PlayersResource(Resource):
                     filter(lambda x: x, args.get('filter[id]').split(','))))
         if len(filter_ids) == 0:
             players = Player.query.join(
-                PlayerStat,
-                Player.stat).order_by(PlayerStat.points.desc()).all()
+                PlayerStatKickerCool,
+                Player.stat).order_by(PlayerStatKickerCool.points.desc()).all()
         else:
             players = Player.query.join(
-                PlayerStat,
+                PlayerStatKickerCool,
                 Player.stat).filter(Player.id.in_(filter_ids)).order_by(
-                    PlayerStat.points.desc()).all()
+                    PlayerStatKickerCool.points.desc()).all()
         print('returning %i players' % len(players))
         return {'data': [p.to_json for p in players]}
 
 
-# FIXME: duplicate to PlayerStatisticsresource?
+# FIXME: duplicate to PlayerStatKickerCoolisticsresource?
 # class PlayerMatchesResource(Resource):
 #     def get(self, id):
 #         teamids = db.session.query(Team.id).filter(
@@ -255,7 +255,7 @@ class PlayerMatchesResource(Resource):
         return dcmodel
 
 
-# class PlayerStatisticsResource(Resource):
+# class PlayerStatKickerCoolisticsResource(Resource):
 #     def get(self, id):
 #         # FIXME: keep this data in db table
 #         player = Player.query.get(id)
@@ -314,7 +314,7 @@ class PlayerMatchesResource(Resource):
 #         return res
 
 
-class TeamStatisticsResource(Resource):
+class TeamStatKickerCoolisticsResource(Resource):
     def get(self, id):
         team = Team.query.get(id)
 
@@ -385,6 +385,6 @@ api.add_resource(
     methods=['GET'])
 
 # api.add_resource(
-#     PlayerStatisticsResource, '/api/statistics/<int:id>', methods=['GET'])
+#     PlayerStatKickerCoolisticsResource, '/api/statistics/<int:id>', methods=['GET'])
 api.add_resource(
-    TeamStatisticsResource, '/api/teamstatistics/<int:id>', methods=['GET'])
+    TeamStatKickerCoolisticsResource, '/api/teamstatistics/<int:id>', methods=['GET'])

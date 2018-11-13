@@ -15,14 +15,14 @@ def avatar_filename(player_name):
 
 
 def fetch_player_avatar(player, avatar_fname):
-    if player.avatar_url:
-        # download avatar
-        r = requests.get(player.avatar_url, stream=True)
-        if r.status_code == 200:
-            with open(avatar_fname, 'wb') as f:
-                r.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f)
-            return
+    # if player.avatar_url:
+    #     # download avatar
+    #     r = requests.get(player.avatar_url, stream=True)
+    #     if r.status_code == 200:
+    #         with open(avatar_fname, 'wb') as f:
+    #             r.raw.decode_content = True
+    #             shutil.copyfileobj(r.raw, f)
+    #         return
     # generate a pagan avatar
     avatar = pagan.Avatar(player.name.encode('utf-8'), pagan.SHA512)
     scaled = avatar.img

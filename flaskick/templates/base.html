@@ -55,25 +55,25 @@
           <h3>Current Ranking</h3>
           <table class="ranking-table">
             <tbody>
-              {% for player in players %}
-              <tr>
-                <td>
-                    <a  href="/player/{{player.id}}">
-                    <div class="ranking-rank">
-                        <img src="/player/{{player.id}}/avatar"/>
-                        <div class="ranking-rank-overlay">
-                            {{loop.index}}
+                {% for player in players %}
+                <tr>
+                    <td>
+                        <a  href="/player/{{player.id}}">
+                            <div class="ranking-rank">
+                                <img src="/player/{{player.id}}/avatar"/>
+                                <div class="ranking-rank-overlay">
+                                    {{loop.index}}
+                                </div>
+                            </div>
+                        </a>
+                    </td>
+                    <td><a href="/player/{{player.id}}">{{player.name}}</a>
+                        <div class="ranking-score">
+                            {{player.points}}
                         </div>
-                    </div>
-                    </a>
-                </td>
-                <td><a href="/player/{{player.id}}">{{player.name}}</a>
-                    <div class="ranking-score">
-                        {{player.stat.points}}
-                    </div>
-                </td>
-              </tr>
-              {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
           </table>
         </div>
