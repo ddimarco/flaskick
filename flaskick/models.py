@@ -259,8 +259,10 @@ def import_dump(data):
         _add_team(match['team2'])
 
     # add matchday
-    # date = data['date']
-    date = datetime.datetime.strptime(data['date'], '%d.%m.%Y')
+    if type(data['date']) is str:
+        date = datetime.datetime.strptime(data['date'], '%d.%m.%Y')
+    else:
+        date = data['date']
     md_qry = MatchDay.query.filter(MatchDay.date == date).first()
     if not md_qry:
         md_qry = MatchDay(date=date)

@@ -5,7 +5,7 @@ from flask import request, jsonify, send_file
 
 from flask_restful import Api, Resource, reqparse
 from flaskick.app import app, db
-from flaskick.models import Match, MatchDay, Player, PlayerStatKickerCool, Team, TeamStatKickerCool, import_matches_from_path, import_dump
+from flaskick.models import Match, MatchDay, Player, PlayerStatKickerCool, Team, TeamStatKickerCool, import_matches_from_path, import_dump, MatchStatsKickerCool
 from flaskick.kicker_scraper import download_and_parse_date
 from flaskick.avatars import generate_or_load_avatar
 
@@ -147,10 +147,10 @@ class TeamsResource(Resource):
                     filter(lambda x: x, args.get('filter[id]').split(','))))
         if len(filter_ids) == 0:
             teams = Team.query.join(
-                TeamStatKickerCool, Team.stat).order_by(TeamStatKickerCool.points.desc()).all()
+                TeamStatKickerCool, Team.id == TeamStatKickerCool.team_id).order_by(TeamStatKickerCool.points.desc()).all()
         else:
             teams = Team.query.join(
-                TeamStatKickerCool, Team.stat).filter(Team.id.in_(filter_ids)).order_by(
+                TeamStatKickerCool, Team.id == TeamStatKickerCool.team_id).filter(Team.id.in_(filter_ids)).order_by(
                     TeamStatKickerCool.points.desc()).all()
         print('returning %i teams' % len(teams))
 
@@ -238,12 +238,14 @@ class PlayerMatchesResource(Resource):
                 return -1
 
         def make_entry(m, won):
+            mstat = db.session.query(MatchStatsKickerCool).filter(MatchStatsKickerCool.id == m.id).first()
             return {
                 'id': m.id,
                 'won': won,
                 'date': m.matchday.date.isoformat(),
                 'crawl': m.crawling,
-                'points': m.points * (1 if won else -1),
+                # 'points': m.points * (1 if won else -1),
+                 'points': mstat.points * (1 if won else -1),
                 # 'partner': get_partner_id(m.team1 if won else m.team2),
                 'team': (m.team1 if won else m.team2).id,
                 'enemy_team': (m.team2 if won else m.team1).id,

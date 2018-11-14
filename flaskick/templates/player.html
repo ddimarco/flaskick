@@ -23,7 +23,7 @@
 
 <div id="page">
     <ul class="list-group">
-        <li class="list-group-item">Points: {{player.stat.points}}</li>
+        <li class="list-group-item">Points: {{player_stats.points}}</li>
         <li class="list-group-item">Games played since {{first_matchday}}: {{matches_played}}</li>
         <li class="list-group-item">Average points won per match: {{avg_points | round(2)}}</li>
         <li class="list-group-item">All-time high: {{highest_points[0]}} ({{highest_points[1].strftime('%a, %d. %b %Y')}})</li>

@@ -88,7 +88,9 @@ def player(pid):
     did_crawl = Match.query.filter(Match.team2_id.in_(teams),
                                    Match.crawling).all()
 
-    points_sum = player.stat.points
+    # points_sum = player.stat.points
+    player_stats = PlayerStatKickerCool.query.filter(PlayerStatKickerCool.player_id == pid).first()
+    points_sum = player_stats.points
     avg_points = float(points_sum - 1200) / float(matches_played)
 
     all_matches = Match.query.filter(
@@ -104,10 +106,11 @@ def player(pid):
     lowest = (points, first_matchday)
     highest = (points, first_matchday)
     for m in all_matches:
+        mstats = MatchStatsKickerCool.query.filter(MatchStatsKickerCool.match_id == m.id).first()
         if m.id in won_ids:
-            points += m.points
+            points += mstats.points
         elif m.id in lost_ids:
-            points -= m.points
+            points -= mstats.points
         else:
             raise RuntimeError('ERROR! you messed up!')
         points_hist.append(points)
@@ -121,7 +124,8 @@ def player(pid):
     return render_template(
         'player.html',
         player=player,
-        # players=get_players_for_ranking(),
+        player_stats=player_stats,
+        players=get_players_for_ranking(),
         teams=all_teams,
         avg_points=avg_points,
         matches_played=matches_played,
