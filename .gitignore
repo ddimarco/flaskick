@@ -8,3 +8,6 @@ include/
 kicker.db
 flaskick/static/bower/
 flaskick/static/avatars/
+
+data/
+data_new/

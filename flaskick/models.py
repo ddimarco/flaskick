@@ -5,7 +5,8 @@ import os
 import yaml
 
 from flaskick.app import db
-from flaskick.avatars import avatar_filename
+# from flaskick.avatars import avatar_filename
+import trueskill
 
 
 class Player(db.Model):
@@ -15,8 +16,8 @@ class Player(db.Model):
     #     db.Integer, db.ForeignKey('player_stat.id'), nullable=False)
     # stat = db.relationship('PlayerStat', back_populates='player')
     avatar_url = db.Column(db.String, nullable=True)
-    # last_match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
-    # last_match = db.relationship('Match')
+    last_match_id = db.Column(db.Integer, db.ForeignKey('match.id'))
+    last_match = db.relationship('Match')
 
     def __repr__(self):
         return '<Player %s>' % self.name
@@ -47,6 +48,21 @@ class PlayerStatKickerCool(db.Model):
     player = db.relationship('Player', uselist=False)
     points = db.Column(db.Integer, nullable=False)
 
+class PlayerStatTrueSkill(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+    player = db.relationship('Player')
+    mu = db.Column(db.Float, nullable=False)
+    sigma = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return '<PlayerStatTrueSkill(id={}, player_id={}, mu={}, sigma={})>'.format(self.id, self.player_id, self.points, self.mu, self.sigma)
+
+    def as_trueskill_rating(self):
+        return trueskill.Rating(mu=self.mu, sigma=self.sigma)
+    def update_rating(self, rating):
+        self.mu = rating.mu
+        self.sigma = rating.sigma
 
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,6 +119,8 @@ class TeamStatKickerCool(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     team = db.relationship('Team', uselist=False)
     points = db.Column(db.Integer, nullable=False)
+    # imported id from kicker.cool
+    # kicker_id = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return '<TeamStatKickerCool(team_id={}, points={})>'.format(self.team_id, self.points)
@@ -118,12 +136,9 @@ class Match(db.Model):
         'Team', uselist=False, primaryjoin='Match.team2_id == Team.id')
     goals_team1 = db.Column(db.Integer, nullable=False, autoincrement=False)
     goals_team2 = db.Column(db.Integer, nullable=False, autoincrement=False)
-    # points = db.Column(db.Integer, nullable=False, autoincrement=False)
     crawling = db.Column(db.Boolean, nullable=False)
     matchday_id = db.Column(db.Integer, db.ForeignKey('matchday.id'))
     matchday = db.relationship('MatchDay', backref='matches')
-    # imported id from kicker.cool
-    # kicker_id = db.Column(db.Integer, nullable=True, autoincrement=False)
 
     @property
     def to_json(self):
@@ -180,13 +195,19 @@ class MatchDay(db.Model):
         }
 
 
-def _get_or_add_player(pname):
+def _get_or_add_player(pname, avatar_url=None):
     p1 = Player.query.filter(Player.name == pname).first()
     if not p1:
-        plr = Player(name=pname)
+        plr = Player(name=pname, avatar_url=avatar_url)
         db.session.add(plr)
         plr_stats = PlayerStatKickerCool(player=plr, points=1200)
         db.session.add(plr_stats)
+
+        ts_rating = trueskill.Rating()
+        playerstat_ts = PlayerStatTrueSkill(player=plr, mu=ts_rating.mu,
+                                            sigma=ts_rating.sigma)
+        db.session.add(playerstat_ts)
+
         return plr
     return p1
 
@@ -241,17 +262,19 @@ def import_dump(data):
     data['matches'].sort(key=lambda d: d['match_id'])
 
     # add new players
-    # for name, img_link in data['avatars'].iteritems():
-    #     player_qry = Player.query.filter(Player.name == name).first()
-    #     # if we already have an avatar for this player, remove it
-    #     avatar_fname = avatar_filename(name)
-    #     if os.path.isfile(avatar_fname):
-    #         os.unlink(avatar_fname)
-    #     if not player_qry:
-    #         plr = Player(name=name, avatar_url=img_link)
-    #         db.session.add(plr)
-    #         # plr_stats = PlayerStat(player=plr, points=1200)
-    #         # db.session.add(plr_stats)
+    for name, img_link in data['avatars'].iteritems():
+        #player_qry = Player.query.filter(Player.name == name).first()
+        plr = _get_or_add_player(name, img_link)
+        # if we already have an avatar for this player, remove it
+        # avatar_fname = avatar_filename(name)
+        # if os.path.isfile(avatar_fname):
+        #     os.unlink(avatar_fname)
+        # if not player_qry:
+        #     # plr = Player(name=name, avatar_url=img_link)
+        #     # db.session.add(plr)
+        #     _get_or_add_player(name, img_link)
+        #     # plr_stats = PlayerStat(player=plr, points=1200)
+        #     # db.session.add(plr_stats)
 
     # add new teams
     for match in data['matches']:
@@ -279,12 +302,32 @@ def import_dump(data):
 
         team_stat = TeamStatKickerCool.query.filter(TeamStatKickerCool.team_id == team.id).first()
         if team_stat is None:
-            print ("no team stat for %s" % team)
-            print (TeamStatKickerCool.query.all())
+            print("no team stat for %s" % team)
+            print(TeamStatKickerCool.query.all())
         team_stat.points += point_difference
         # team.player1.stat.points += difference
         # if team.player2:
         #     team.player2.stat.points += difference
+
+    def _update_teams_trueskill(winners, losers):
+        def _get_player_ts_rating(player):
+            return db.session.query(PlayerStatTrueSkill).filter(PlayerStatTrueSkill.player_id == player.id).first()
+
+        winner_ts_rating_objects = [_get_player_ts_rating(winners.player1)]
+        if winners.player2:
+            winner_ts_rating_objects.append(_get_player_ts_rating(winners.player2))
+        loser_ts_rating_objects = [_get_player_ts_rating(losers.player1)]
+        if losers.player2:
+            loser_ts_rating_objects.append(_get_player_ts_rating(losers.player2))
+
+        win_ratings = [o.as_trueskill_rating() for o in winner_ts_rating_objects]
+        loser_ratings = [o.as_trueskill_rating() for o in loser_ts_rating_objects]
+        new_win_ratings, new_lost_ratings = trueskill.rate([win_ratings, loser_ratings])
+        for obj, new_rating in zip(winner_ts_rating_objects, new_win_ratings):
+            obj.update_rating(new_rating)
+
+        for obj, new_rating in zip(loser_ts_rating_objects, new_lost_ratings):
+            obj.update_rating(new_rating)
 
     # add matches
     for match in data['matches']:
@@ -298,6 +341,7 @@ def import_dump(data):
         difference = match['difference']
         _update_team_stat_kc(winner, difference)
         _update_team_stat_kc(loser, -difference)
+        _update_teams_trueskill(winner, loser)
 
         [goals_t1, goals_t2] = map(int, match['score'].split(':'))
         match = Match(

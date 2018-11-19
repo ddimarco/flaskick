@@ -1,7 +1,7 @@
 from flask import render_template
 
 from app import app, db
-from models import Match, MatchStatsKickerCool, MatchDay, Player, PlayerStatKickerCool, Team, TeamStatKickerCool
+from models import Match, MatchStatsKickerCool, MatchDay, Player, PlayerStatKickerCool, PlayerStatTrueSkill, Team, TeamStatKickerCool
 
 import datetime
 
@@ -49,6 +49,28 @@ def player_list():
         pstats.append(pstat)
 
     return render_template('player-list.html', players=get_players_for_ranking(),
+                           allplayers=zip(allplayers, pstats))
+
+@app.route('/players_ts')
+def player_list_ts():
+    allplayers = Player.query.join(PlayerStatTrueSkill, Player.id == PlayerStatTrueSkill.player_id).order_by(PlayerStatTrueSkill.mu.desc()).all()
+    pstats = []
+    for p in allplayers:
+        teams = db.session.query(Team.id).filter(
+            db.or_(Team.player1 == p, Team.player2 == p)).subquery()
+        won_matches = Match.query.filter(Match.team1_id.in_(teams)).all()
+        lost_matches = Match.query.filter(Match.team2_id.in_(teams)).all()
+        matches_played = len(won_matches) + len(lost_matches)
+        win_quota = float(len(won_matches)) / float(matches_played)
+        ts_rating = PlayerStatTrueSkill.query.filter(PlayerStatTrueSkill.player_id == p.id).first().as_trueskill_rating()
+        pstat = {
+            'matches_played': matches_played,
+            'win_quota': win_quota * 100.,
+            'rating': ts_rating,
+        }
+        pstats.append(pstat)
+
+    return render_template('player-list-trueskill.html', players=get_players_for_ranking(),
                            allplayers=zip(allplayers, pstats))
 
 @app.route('/teams')

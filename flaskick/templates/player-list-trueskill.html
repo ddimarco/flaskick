@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Flaskick - Player List (TrueSkill) {% endblock %}
+{% block scripts %}{% endblock %}
+{% block content %}
+
+<h1>All Time Ranking (TrueSkill)</h1>
+
+<table class="table allplayers-table" style="width:75%;">
+    <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Win Quota</th>
+        <th>Games Played</th>
+        <th>&mu;</th>
+        <th>&sigma;</th>
+    </tr>
+    <tbody>
+    {% for player,pstat in allplayers %}
+    <tr>
+        <td class="allplayers-rank">{{loop.index}}</td>
+        <td>
+            <a href="/player/{{player.id}}">
+            <img src="/player/{{player.id}}/avatar"/>
+            {{player.name}}
+            </a>
+        </td>
+        <td>{{pstat.win_quota  | round(2)}} %</td>
+        <td>{{pstat.matches_played}}</td>
+        <td>{{pstat.rating.mu | round(2)}}</td>
+        <td>{{pstat.rating.sigma | round(2)}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

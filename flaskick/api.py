@@ -11,6 +11,7 @@ from flaskick.avatars import generate_or_load_avatar
 
 import datetime
 import magic
+import StringIO
 
 api = Api(app)
 
@@ -46,8 +47,14 @@ def _db_state():
 def player_avatar(pid):
     player = Player.query.get(pid)
     avatar_fname = generate_or_load_avatar(player)
-    mime = magic.Magic(mime=True)
-    return send_file(avatar_fname, mime.from_file(avatar_fname))
+    # mime = magic.Magic(mime=True)
+    # avatar = generate_or_load_avatar(player)
+    # img_io = StringIO.StringIO()
+    # avatar.save(img_io, 'PNG')
+    # img_io.seek(0)
+    return send_file(avatar_fname, mimetype='image/png')
+
+    # return send_file(avatar_fname, mime.from_file(avatar_fname))
 
 
 class MatchDaysResource(Resource):

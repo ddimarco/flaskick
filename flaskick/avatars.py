@@ -4,6 +4,7 @@ import os
 import requests
 import pagan
 import shutil
+import hashlib
 
 from flaskick.app import app
 
@@ -15,19 +16,19 @@ def avatar_filename(player_name):
 
 
 def fetch_player_avatar(player, avatar_fname):
-    # if player.avatar_url:
-    #     # download avatar
-    #     r = requests.get(player.avatar_url, stream=True)
-    #     if r.status_code == 200:
-    #         with open(avatar_fname, 'wb') as f:
-    #             r.raw.decode_content = True
-    #             shutil.copyfileobj(r.raw, f)
-    #         return
+    if player.avatar_url:
+        # download avatar
+        r = requests.get(player.avatar_url, stream=True)
+        if r.status_code == 200:
+            with open(avatar_fname, 'wb') as f:
+                r.raw.decode_content = True
+                shutil.copyfileobj(r.raw, f)
+            return
     # generate a pagan avatar
-    avatar = pagan.Avatar(player.name.encode('utf-8'), pagan.SHA512)
-    scaled = avatar.img
-    scaled.thumbnail((80, 80))
-    scaled.save(avatar_fname, 'PNG')
+    # avatar = pagan.Avatar(player.name.encode('utf-8'), pagan.SHA512)
+    # scaled = avatar.img
+    # scaled.thumbnail((80, 80))
+    # scaled.save(avatar_fname, 'PNG')
 
 
 def generate_or_load_avatar(player):
@@ -40,3 +41,7 @@ def generate_or_load_avatar(player):
     if not os.path.isfile(avatar_fname):
         fetch_player_avatar(player, avatar_fname)
     return avatar_fname
+    # avatar = pagan.Avatar(player.name.encode('utf-8'), pagan.SHA512)
+    # scaled = avatar.img
+    # scaled.thumbnail((80, 80))
+    # return scaled
