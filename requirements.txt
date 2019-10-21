@@ -26,4 +26,4 @@ requests==2.18.4
 six==1.10.0               # via flask-restful, python-dateutil
 sqlalchemy==1.1.6         # via flask-sqlalchemy
 urllib3==1.22             # via requests
-werkzeug==0.12.1          # via flask
+werkzeug==0.15.3          # via flask
