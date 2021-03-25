@@ -4,26 +4,56 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-aniso8601==1.2.0          # via flask-restful
+aniso8601==1.2.0
+    # via flask-restful
 beautifulsoup4==4.6.0
-certifi==2017.7.27.1      # via requests
-chardet==3.0.4            # via requests
+    # via -r requirements.in
+certifi==2017.7.27.1
+    # via requests
+chardet==3.0.4
+    # via requests
 click==6.7
+    # via
+    #   -r requirements.in
+    #   flask
 flask-restful==0.3.6
+    # via -r requirements.in
 flask-sqlalchemy==2.3.2
+    # via -r requirements.in
 flask==0.12
-idna==2.6                 # via requests
-itsdangerous==0.24        # via flask
-jinja2==2.9.5             # via flask
-markupsafe==1.0           # via jinja2
+    # via
+    #   -r requirements.in
+    #   flask-restful
+    #   flask-sqlalchemy
+idna==2.6
+    # via requests
+itsdangerous==0.24
+    # via flask
+jinja2==2.9.5
+    # via flask
+markupsafe==1.0
+    # via jinja2
 pagan==0.4.3
-pillow==5.2.0             # via pagan
-python-dateutil==2.6.0    # via aniso8601
+    # via -r requirements.in
+pillow==5.2.0
+    # via pagan
+python-dateutil==2.6.0
+    # via aniso8601
 python-magic==0.4.13
-pytz==2016.10             # via flask-restful
-pyyaml==3.12
+    # via -r requirements.in
+pytz==2016.10
+    # via flask-restful
+pyyaml==5.4
+    # via -r requirements.in
 requests==2.18.4
-six==1.10.0               # via flask-restful, python-dateutil
-sqlalchemy==1.1.6         # via flask-sqlalchemy
-urllib3==1.22             # via requests
-werkzeug==0.12.1          # via flask
+    # via -r requirements.in
+six==1.10.0
+    # via
+    #   flask-restful
+    #   python-dateutil
+sqlalchemy==1.1.6
+    # via flask-sqlalchemy
+urllib3==1.22
+    # via requests
+werkzeug==0.12.1
+    # via flask
